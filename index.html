@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CNN 2026 Extended Course</title>
+    <style>
+        /* --- 基本設定 --- */
+        html, body {
+            height: 100%;
+            width: 100%;
+            overflow: hidden; /* 完全スクロール禁止 */
+            margin: 0;
+            padding: 0;
+            font-family: "Helvetica Neue", Arial, sans-serif;
+            background-color: #fff0f5; /* 背景を薄いピンクに */
+            box-sizing: border-box;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 4px;
+        }
+
+        /* --- 画面の向き警告 --- */
+        #portraitWarning {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background-color: #ffe0e0;
+            z-index: 20000;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            color: #555;
+        }
+        #portraitWarning h2 { font-size: 24px; margin-bottom: 10px; }
+        
+        @media screen and (orientation: portrait) {
+            #portraitWarning { display: flex; }
+            .nav-container, .app-container { display: none !important; }
+        }
+
+        /* --- ナビゲーションバー (20個対応) --- */
+        .nav-container {
+            width: 100%;
+            height: 8vh; /* 2段になるため高さを倍増 */
+            min-height: 56px;
+            display: grid;
+            grid-template-columns: repeat(10, 1fr); /* 横10個 */
+            grid-template-rows: repeat(2, 1fr);    /* 縦2行 */
+            gap: 2px;
+            margin-bottom: 4px;
+            flex-shrink: 0;
+        }
+        .nav-btn {
+            background-color: #eee;
+            border: 1px solid #fff;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            color: #555;
+            font-size: clamp(8px, 1.2vh, 12px); /* 文字サイズ微調整 */
+            transition: 0.3s;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            white-space: nowrap;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+        .nav-btn:hover { background-color: #ffccbc; }
+        
+        /* アクティブ時の色：パープル〜ピンク系 */
+        .nav-btn.active {
+            background: linear-gradient(135deg, #ba68c8, #8e24aa);
+            color: white;
+            border: 1px solid white;
+        }
+
+        /* --- アプリ本体 --- */
+        .app-container {
+            width: 100%;
+            flex-grow: 1; 
+            background-color: white;
+            display: flex;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 0;
+            position: relative; 
+        }
+
+        /* 左側：メイン画面 */
+        .main-screen {
+            flex-grow: 1;
+            width: 0;
+            position: relative;
+            background-color: #000;
+            overflow: hidden;
+            min-width: 20%;
+        }
+
+        #bgLayer {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            object-fit: fill;
+            z-index: 1;
+        }
+        #contentLayer {
+            position: absolute;
+            top: 17%; left: 2.5%; 
+            width: 95%; height: 80%;
+            object-fit: fill;
+            display: none;
+            z-index: 2;
+        }
+
+        .answer-box {
+            position: absolute;
+            border: 4px solid #ff4081; /* 赤からピンク寄りの赤へ */
+            border-radius: 8px;
+            display: none;
+            background-color: rgba(255, 64, 129, 0.2);
+            cursor: pointer;
+            z-index: 10;
+        }
+
+        /* --- リサイズハンドル --- */
+        #drag-handle {
+            width: 18px;
+            background: linear-gradient(to right, #ffe0b2, #ffcc80, #ffe0b2); /* オレンジ系 */
+            cursor: col-resize;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-shrink: 0;
+            z-index: 100;
+            touch-action: none;
+            border-left: 1px solid #ffb74d;
+            border-right: 1px solid #ffb74d;
+        }
+        #drag-handle::after {
+            content: "";
+            width: 4px;
+            height: 30px;
+            border-left: 2px solid #ef6c00;
+            border-right: 2px solid #ef6c00;
+        }
+
+        /* --- 右側：サイドバー --- */
+        .sidebar {
+            width: 200px;
+            min-width: 160px;
+            max-width: 60%;
+            background-color: #fff3e0; /* 薄いオレンジ背景 */
+            padding: 6px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            gap: 2px;
+            overflow: hidden;
+            flex-shrink: 0;
+            height: 100%;
+            box-sizing: border-box;
+        }
+
+        .sidebar-group {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            flex-shrink: 1;
+        }
+
+        .group-flexible {
+            flex-grow: 1; 
+            justify-content: center;
+        }
+
+        /* 共通ボタンスタイル */
+        .btn {
+            border: 2px solid white;
+            border-radius: 6px;
+            cursor: pointer;
+            color: white;
+            font-weight: 900;
+            font-size: clamp(10px, 2vh, 16px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.1s;
+            width: 100%;
+            padding: clamp(6px, 1.2vh, 10px) 0;
+            white-space: nowrap;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+            text-shadow: 1px 1px 1px rgba(0,0,0,0.2);
+            flex-shrink: 1; 
+        }
+        .btn:hover { opacity: 0.9; transform: translateY(-1px); }
+        .btn:active { transform: translateY(1px); }
+
+        /* 再生ボタン専用 */
+        .btn-audio-nat, .btn-audio-slow {
+            font-size: clamp(14px, 2.5vh, 20px) !important;
+        }
+
+        /* オーディオエリア */
+        .audio-wrapper {
+            background-color: rgba(255,255,255,0.5);
+            border-radius: 6px;
+            padding: 4px;
+            margin-bottom: 2px;
+            box-shadow: inset 0 0 3px rgba(0,0,0,0.1);
+            flex-shrink: 1;
+        }
+        
+        .audio-controls, .loop-controls {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 4px;
+            gap: 10px;
+        }
+        
+        /* 制御ボタン */
+        .ctrl-btn, .loop-btn {
+            background: linear-gradient(135deg, #8d6e63, #5d4037); /* ブラウン系 */
+            color: white;
+            border: 1px solid white;
+            border-radius: 4px;
+            flex: 1;
+            padding: 14px 0;
+            font-size: clamp(9px, 1.2vh, 12px);
+            cursor: pointer;
+            font-weight: bold;
+            white-space: nowrap;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 4px;
+            flex-direction: column; 
+        }
+        
+        .stop-btn {
+            background: linear-gradient(135deg, #a1887f, #8d6e63);
+            flex: 1.5;
+        }
+
+        .loop-btn {
+            background: linear-gradient(135deg, #bdbdbd, #9e9e9e);
+        }
+        
+        .loop-active {
+            background: #f8bbd0 !important; /* ピンク系ハイライト */
+            background-image: none !important;
+            color: #c2185b !important;
+            border: 2px solid #e91e63 !important;
+            text-shadow: none !important;
+        }
+
+        /* クイズ番号 */
+        .quiz-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr; /* 2つだけなので横並び */
+            gap: 3px;
+            margin-top: 2px;
+        }
+        .btn-num {
+            background: linear-gradient(135deg, #ff7043, #f4511e); /* オレンジ系 */
+            font-size: clamp(14px, 2.5vh, 20px);
+            font-weight: bold;
+            padding: clamp(6px, 1vh, 10px) 0;
+            border-radius: 4px;
+            color: white;
+            border: 2px solid white;
+            cursor: pointer;
+            box-shadow: 0 2px 3px rgba(0,0,0,0.2);
+        }
+
+        /* --- カラーパレット変更（ピンク・オレンジ・パープル系） --- */
+        .btn-audio-nat { background: linear-gradient(135deg, #ec407a, #d81b60); } /* ピンク */
+        .btn-audio-slow { background: linear-gradient(135deg, #ab47bc, #8e24aa); } /* パープル */
+        
+        /* Script/Vocabなど */
+        .btn-point { background: linear-gradient(135deg, #ffca28, #ffb300); margin-bottom: 3px; color: #444; text-shadow:none;} /* 黄色/オレンジ */
+        .btn-script { background: linear-gradient(135deg, #ffa726, #fb8c00); margin-bottom: 1px;} /* オレンジ */
+        .btn-vocab { background: linear-gradient(135deg, #ff7043, #f4511e); margin-bottom: 1px;} /* 濃いオレンジ */
+        .btn-japanese { background: linear-gradient(135deg, #78909c, #546e7a); margin-bottom: 1px;} /* シックなグレー */
+        
+        .btn-compre { background: linear-gradient(135deg, #66bb6a, #43a047); } /* クイズだけ緑系を残すか、テーマに合わせるなら下 */
+        /* .btn-compre { background: linear-gradient(135deg, #26a69a, #00897b); } ティール系 */
+
+        .btn-clear { background: linear-gradient(135deg, #78909c, #607d8b); margin-top: 2px; }
+
+        hr {
+            margin: 2px 0;
+            border: 0;
+            border-top: 1px dashed #ffa07a;
+            width: 100%;
+            flex-shrink: 0;
+        }
+        
+        .icon-svg {
+            width: 24px;
+            height: 24px;
+            fill: white;
+            display: block;
+        }
+        /* Get pointボタンは文字色が濃いのでアイコンも濃く */
+        .btn-point .icon-svg { fill: #444; }
+
+    </style>
+</head>
+<body>
+
+    <div id="portraitWarning">
+        <h2>画面を横にしてください</h2>
+        <p>Please rotate your device to landscape mode.</p>
+    </div>
+
+    <div class="nav-container">
+        <button class="nav-btn active" onclick="selectLesson('news1', this)">News 1</button>
+        <button class="nav-btn" onclick="selectLesson('news2', this)">News 2</button>
+        <button class="nav-btn" onclick="selectLesson('news3', this)">News 3</button>
+        <button class="nav-btn" onclick="selectLesson('news4', this)">News 4</button>
+        <button class="nav-btn" onclick="selectLesson('news5', this)">News 5</button>
+        <button class="nav-btn" onclick="selectLesson('news6', this)">News 6</button>
+        <button class="nav-btn" onclick="selectLesson('news7', this)">News 7</button>
+        <button class="nav-btn" onclick="selectLesson('news8', this)">News 8</button>
+        <button class="nav-btn" onclick="selectLesson('news9', this)">News 9</button>
+        <button class="nav-btn" onclick="selectLesson('news10', this)">News 10</button>
+        
+        <button class="nav-btn" onclick="selectLesson('news11', this)">News 11</button>
+        <button class="nav-btn" onclick="selectLesson('news12', this)">News 12</button>
+        <button class="nav-btn" onclick="selectLesson('news13', this)">News 13</button>
+        <button class="nav-btn" onclick="selectLesson('news14', this)">News 14</button>
+        <button class="nav-btn" onclick="selectLesson('news15', this)">News 15</button>
+        <button class="nav-btn" onclick="selectLesson('news16', this)">News 16</button>
+        <button class="nav-btn" onclick="selectLesson('news17', this)">News 17</button>
+        <button class="nav-btn" onclick="selectLesson('news18', this)">News 18</button>
+        <button class="nav-btn" onclick="selectLesson('news19', this)">News 19</button>
+        <button class="nav-btn" onclick="selectLesson('news20', this)">News 20</button>
+    </div>
+
+    <div class="app-container" id="appContainer">
+        
+        <div class="main-screen" id="mainScreen">
+            <img id="bgLayer" src="" alt="Background">
+            <img id="contentLayer" src="" alt="Content">
+            <div id="ans1" class="answer-box"></div>
+            <div id="ans2" class="answer-box"></div>
+        </div>
+
+        <div id="drag-handle"></div>
+
+        <div class="sidebar" id="sidebar">
+            
+            <div class="sidebar-group">
+                <div class="audio-wrapper">
+                    <button class="btn btn-audio-nat" id="btn-main-natural" onclick="togglePlayPause('natural')">
+                        Natural <svg class="icon-svg" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                    </button>
+                    <div class="audio-controls">
+                        <button class="ctrl-btn" onclick="seekAudio('natural', -5)">
+                            <svg class="icon-svg" viewBox="0 0 24 24"><path d="M11 18V6l-8.5 6 8.5 6zm.5-6l8.5 6V6l-8.5 6z"/></svg> 5s
+                        </button>
+                        <button class="ctrl-btn stop-btn" onclick="stopAudioOnly('natural')">
+                            <svg class="icon-svg" viewBox="0 0 24 24"><path d="M6 6h12v12H6z"/></svg>
+                        </button>
+                        <button class="ctrl-btn" onclick="seekAudio('natural', 5)">
+                            <svg class="icon-svg" viewBox="0 0 24 24"><path d="M4 18l8.5-6L4 6v12zm9-12v12l8.5-6L13 6z"/></svg> 5s
+                        </button>
+                    </div>
+                    <div class="loop-controls">
+                        <button id="btn-natural-start" class="loop-btn" onclick="setLoopStart('natural')">Start</button>
+                        <button id="btn-natural-end" class="loop-btn" onclick="setLoopEnd('natural')">End</button>
+                        <button class="loop-btn" onclick="clearLoop('natural')">Clear</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sidebar-group">
+                <div class="audio-wrapper">
+                    <button class="btn btn-audio-slow" id="btn-main-slow" onclick="togglePlayPause('slow')">
+                        Slow <svg class="icon-svg" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                    </button>
+                    <div class="audio-controls">
+                        <button class="ctrl-btn" onclick="seekAudio('slow', -5)">
+                            <svg class="icon-svg" viewBox="0 0 24 24"><path d="M11 18V6l-8.5 6 8.5 6zm.5-6l8.5 6V6l-8.5 6z"/></svg> 5s
+                        </button>
+                        <button class="ctrl-btn stop-btn" onclick="stopAudioOnly('slow')">
+                            <svg class="icon-svg" viewBox="0 0 24 24"><path d="M6 6h12v12H6z"/></svg>
+                        </button>
+                        <button class="ctrl-btn" onclick="seekAudio('slow', 5)">
+                            <svg class="icon-svg" viewBox="0 0 24 24"><path d="M4 18l8.5-6L4 6v12zm9-12v12l8.5-6L13 6z"/></svg> 5s
+                        </button>
+                    </div>
+                    <div class="loop-controls">
+                        <button id="btn-slow-start" class="loop-btn" onclick="setLoopStart('slow')">Start</button>
+                        <button id="btn-slow-end" class="loop-btn" onclick="setLoopEnd('slow')">End</button>
+                        <button class="loop-btn" onclick="clearLoop('slow')">Clear</button>
+                    </div>
+                </div>
+            </div>
+
+            <hr>
+
+            <div class="sidebar-group group-flexible">
+                <button class="btn btn-point" onclick="toggleSlide('point')">
+                    Get the point <svg class="icon-svg" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                </button>
+                
+                <button class="btn btn-script" onclick="toggleSlide('transcript')">Script</button>
+                <button class="btn btn-script" onclick="toggleSlide('newwords')">Vocabulary</button>
+                <button class="btn btn-vocab" onclick="toggleMainAudio('vocab')">Pronunciation 🎧</button>
+                <button class="btn btn-japanese" onclick="toggleSlide('japanese')">Japanese</button>
+            </div>
+
+            <hr>
+
+            <div class="sidebar-group">
+                <button class="btn btn-compre" onclick="toggleSlide('compre')">Comprehension</button>
+                <div class="quiz-controls">
+                    <button class="btn-num" onclick="toggleAnswer(1)">1</button>
+                    <button class="btn-num" onclick="toggleAnswer(2)">2</button>
+                </div>
+                <button class="btn btn-clear" onclick="clearAllAnswers()">ALL CLEAR</button>
+            </div>
+        </div>
+    </div>
+
+    <audio id="audioNatural"></audio>
+    <audio id="audioSlow"></audio>
+    <audio id="audioVocab"></audio>
+
+<script>
+    const iconPlay = '<svg class="icon-svg" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>';
+    const iconPause = '<svg class="icon-svg" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>';
+
+    // --- ドラッグサイズ調整 ---
+    const dragHandle = document.getElementById('drag-handle');
+    const sidebar = document.getElementById('sidebar');
+    const appContainer = document.getElementById('appContainer');
+    let isResizing = false;
+
+    dragHandle.addEventListener('mousedown', startResize);
+    dragHandle.addEventListener('touchstart', startResize, {passive: false});
+
+    function startResize(e) {
+        e.preventDefault();
+        isResizing = true;
+        document.body.style.cursor = 'col-resize';
+        document.addEventListener('mousemove', resize);
+        document.addEventListener('touchmove', resize, {passive: false});
+        document.addEventListener('mouseup', stopResize);
+        document.addEventListener('touchend', stopResize);
+    }
+
+    function resize(e) {
+        if (!isResizing) return;
+        const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+        const containerRect = appContainer.getBoundingClientRect();
+        let newSidebarWidth = containerRect.right - clientX;
+        if (newSidebarWidth < 150) newSidebarWidth = 150;
+        if (newSidebarWidth > containerRect.width * 0.7) newSidebarWidth = containerRect.width * 0.7;
+        sidebar.style.width = newSidebarWidth + 'px';
+    }
+
+    function stopResize() {
+        isResizing = false;
+        document.body.style.cursor = 'default';
+        document.removeEventListener('mousemove', resize);
+        document.removeEventListener('touchmove', resize);
+        document.removeEventListener('mouseup', stopResize);
+        document.removeEventListener('touchend', stopResize);
+    }
+
+    // --- オーディオ＆ループ変数 ---
+    const loopStates = {
+        natural: { start: null, end: null, active: false },
+        slow: { start: null, end: null, active: false }
+    };
+
+    // --- News設定 (座標) ---
+    // ※Intensiveの1-10はそのままで、11-20は仮のデータを入れています
+    const answerSettings = {
+        news1: [ { top:'34%', left:'10%', width:'15%', height:'5%' }, { top:'48%', left:'53%', width:'35%', height:'5%' } ],
+        news2: [ { top:'61%', left:'8%', width:'35%', height:'5%' }, { top:'36%', left:'53%', width:'35%', height:'5%' } ],
+        news3: [ { top:'48%', left:'9%', width:'17%', height:'4%' }, { top:'44%', left:'53%', width:'35%', height:'8%' } ],
+        news4: [ { top:'56%', left:'7%', width:'23%', height:'4%' }, { top:'37%', left:'52%', width:'25%', height:'4%' } ],
+        news5: [ { top:'48%', left:'7%', width:'10%', height:'4%' }, { top:'53%', left:'47%', width:'48%', height:'10%' } ],
+        news6: [ { top:'40%', left:'7%', width:'20%', height:'5%' }, { top:'59%', left:'40%', width:'50%', height:'9%' } ],
+        news7: [ { top:'59%', left:'7%', width:'40%', height:'4%' }, { top:'35%', left:'53%', width:'40%', height:'5%' } ],
+        news8: [ { top:'54%', left:'7%', width:'15%', height:'4%' }, { top:'49%', left:'54%', width:'23%', height:'4%' } ],
+        news9: [ { top:'43%', left:'7%', width:'30%', height:'4%' }, { top:'38%', left:'53%', width:'30%', height:'4%' } ],
+        news10: [ { top:'49%', left:'7%', width:'35%', height:'5%' }, { top:'44%', left:'52%', width:'25%', height:'4.5%' } ],
+        // 以下、Extended用ダミー（必要に応じて座標を調整してください）
+        news11: [ { top:'50%', left:'10%', width:'20%', height:'5%' }, { top:'50%', left:'60%', width:'20%', height:'5%' } ],
+        news12: [ { top:'50%', left:'10%', width:'20%', height:'5%' }, { top:'50%', left:'60%', width:'20%', height:'5%' } ],
+        news13: [ { top:'50%', left:'10%', width:'20%', height:'5%' }, { top:'50%', left:'60%', width:'20%', height:'5%' } ],
+        news14: [ { top:'50%', left:'10%', width:'20%', height:'5%' }, { top:'50%', left:'60%', width:'20%', height:'5%' } ],
+        news15: [ { top:'50%', left:'10%', width:'20%', height:'5%' }, { top:'50%', left:'60%', width:'20%', height:'5%' } ],
+        news16: [ { top:'50%', left:'10%', width:'20%', height:'5%' }, { top:'50%', left:'60%', width:'20%', height:'5%' } ],
+        news17: [ { top:'50%', left:'10%', width:'20%', height:'5%' }, { top:'50%', left:'60%', width:'20%', height:'5%' } ],
+        news18: [ { top:'50%', left:'10%', width:'20%', height:'5%' }, { top:'50%', left:'60%', width:'20%', height:'5%' } ],
+        news19: [ { top:'50%', left:'10%', width:'20%', height:'5%' }, { top:'50%', left:'60%', width:'20%', height:'5%' } ],
+        news20: [ { top:'50%', left:'10%', width:'20%', height:'5%' }, { top:'50%', left:'60%', width:'20%', height:'5%' } ]
+    };
+
+    let currentFolder = 'news1'; 
+    let currentAudioType = null;
+    let activeSlideType = null;
+
+    const fileNames = {
+        main: 'main.png',
+        point: 'point.png', // 新しく追加したGet the point用画像
+        transcript: 'transcript.png',
+        newwords: 'newwords.png',
+        japanese: 'japanese.png',
+        compre: 'compre.png',
+        natural: 'natural.mp3',
+        slow: 'slow.mp3',
+        vocab: 'vocab.mp3'
+    };
+
+    const bgLayer = document.getElementById('bgLayer');
+    const contentLayer = document.getElementById('contentLayer');
+    const audioNat = document.getElementById('audioNatural');
+    const audioSlow = document.getElementById('audioSlow');
+    const audioVocab = document.getElementById('audioVocab');
+    const navBtns = document.querySelectorAll('.nav-btn');
+    const answerBoxes = [
+        document.getElementById('ans1'),
+        document.getElementById('ans2')
+    ];
+
+    audioNat.addEventListener('timeupdate', () => checkLoop('natural'));
+    audioSlow.addEventListener('timeupdate', () => checkLoop('slow'));
+    audioNat.addEventListener('ended', () => updatePlayButtonUI('natural', false));
+    audioSlow.addEventListener('ended', () => updatePlayButtonUI('slow', false));
+    audioVocab.addEventListener('ended', () => { if(currentAudioType === 'vocab') currentAudioType = null; });
+
+    window.onload = function() {
+        loadLesson(currentFolder);
+    };
+
+    function selectLesson(folderName, btnElement) {
+        currentFolder = folderName;
+        navBtns.forEach(btn => btn.classList.remove('active'));
+        btnElement.classList.add('active');
+        loadLesson(folderName);
+    }
+
+    function loadLesson(folder) {
+        bgLayer.src = `${folder}/${fileNames.main}`;
+        contentLayer.style.display = 'none';
+        contentLayer.src = ''; 
+        activeSlideType = null;
+
+        audioNat.src = `${folder}/${fileNames.natural}`;
+        audioSlow.src = `${folder}/${fileNames.slow}`;
+        audioVocab.src = `${folder}/${fileNames.vocab}`;
+        
+        stopAllAudio();
+        clearAllAnswers();
+        applyAnswerSettings(folder);
+    }
+
+    function applyAnswerSettings(folder) {
+        const settings = answerSettings[folder] || answerSettings['news1'];
+        // ボックスは2つだけ処理
+        for(let i = 0; i < 2; i++) {
+            if(settings[i]) {
+                answerBoxes[i].style.top = settings[i].top;
+                answerBoxes[i].style.left = settings[i].left;
+                answerBoxes[i].style.width = settings[i].width;
+                answerBoxes[i].style.height = settings[i].height;
+            }
+        }
+    }
+
+    function toggleSlide(type) {
+        if (activeSlideType === type) {
+            contentLayer.style.display = 'none';
+            activeSlideType = null;
+        } else {
+            if(fileNames[type]) {
+                contentLayer.src = `${currentFolder}/${fileNames[type]}`;
+                contentLayer.style.display = 'block';
+                activeSlideType = type;
+            }
+        }
+        if (type !== 'compre') hideAnswerBoxes();
+    }
+
+    function hideAnswerBoxes() {
+        answerBoxes.forEach(box => {
+            box.style.display = 'none';
+        });
+    }
+
+    function togglePlayPause(type) {
+        let target = getAudioElement(type);
+        if (!target) return;
+
+        if (currentAudioType && currentAudioType !== type) {
+            let other = getAudioElement(currentAudioType);
+            if(other) {
+                other.pause();
+                updatePlayButtonUI(currentAudioType, false);
+            }
+        }
+
+        if (target.paused) {
+            target.play().catch(e => console.log(e));
+            currentAudioType = type;
+            updatePlayButtonUI(type, true);
+        } else {
+            target.pause();
+            updatePlayButtonUI(type, false);
+        }
+    }
+
+    function toggleMainAudio(type) {
+        let target = getAudioElement(type);
+        if (!target) return;
+        
+        if (currentAudioType && currentAudioType !== type) {
+            let other = getAudioElement(currentAudioType);
+            if(other) {
+                other.pause();
+                updatePlayButtonUI(currentAudioType, false);
+            }
+        }
+
+        if (!target.paused && currentAudioType === type) {
+            target.pause();
+            target.currentTime = 0;
+            currentAudioType = null;
+        } else {
+            target.currentTime = 0;
+            target.play().catch(e => console.log(e));
+            currentAudioType = type;
+        }
+    }
+
+    function updatePlayButtonUI(type, isPlaying) {
+        if (type !== 'natural' && type !== 'slow') return;
+
+        const btn = document.getElementById(`btn-main-${type}`);
+        if (!btn) return;
+        
+        const label = type === 'natural' ? 'Natural' : 'Slow';
+        
+        if (isPlaying) {
+            btn.innerHTML = `${label} ${iconPause}`; 
+        } else {
+            btn.innerHTML = `${label} ${iconPlay}`; 
+        }
+    }
+
+    function seekAudio(type, seconds) {
+        let target = getAudioElement(type);
+        if (target) {
+            target.currentTime += seconds;
+        }
+    }
+
+    function getAudioElement(type) {
+        if (type === 'natural') return audioNat;
+        if (type === 'slow') return audioSlow;
+        if (type === 'vocab') return audioVocab;
+        return null;
+    }
+
+    function stopAudioOnly(type) {
+        let target = getAudioElement(type);
+        if (target) {
+            target.pause();
+            target.currentTime = 0;
+            if(currentAudioType === type) currentAudioType = null;
+            updatePlayButtonUI(type, false);
+        }
+    }
+
+    function stopAllAudio() {
+        audioNat.pause(); audioNat.currentTime = 0;
+        audioSlow.pause(); audioSlow.currentTime = 0;
+        audioVocab.pause(); audioVocab.currentTime = 0;
+        currentAudioType = null;
+        
+        updatePlayButtonUI('natural', false);
+        updatePlayButtonUI('slow', false);
+        
+        clearLoop('natural');
+        clearLoop('slow');
+    }
+
+    function toggleAnswer(num) {
+        const box = document.getElementById('ans' + num);
+        if (box) {
+            box.style.display = (box.style.display === 'block') ? 'none' : 'block';
+        }
+    }
+
+    function clearAllAnswers() {
+        hideAnswerBoxes();
+        contentLayer.style.display = 'none';
+        contentLayer.src = '';
+        activeSlideType = null;
+    }
+
+    function setLoopStart(type) {
+        const audio = getAudioElement(type);
+        if(!audio) return;
+        
+        loopStates[type].start = audio.currentTime;
+        loopStates[type].end = null;
+        loopStates[type].active = false;
+        
+        document.getElementById(`btn-${type}-start`).classList.add('loop-active');
+        document.getElementById(`btn-${type}-end`).classList.remove('loop-active');
+    }
+
+    function setLoopEnd(type) {
+        const audio = getAudioElement(type);
+        if(!audio) return;
+        if(loopStates[type].start === null) return; 
+
+        loopStates[type].end = audio.currentTime;
+        
+        if(loopStates[type].end <= loopStates[type].start) return;
+
+        loopStates[type].active = true;
+        
+        if(audio.paused) togglePlayPause(type);
+
+        document.getElementById(`btn-${type}-end`).classList.add('loop-active');
+    }
+
+    function clearLoop(type) {
+        loopStates[type] = { start: null, end: null, active: false };
+        
+        document.getElementById(`btn-${type}-start`).classList.remove('loop-active');
+        document.getElementById(`btn-${type}-end`).classList.remove('loop-active');
+    }
+
+    function checkLoop(type) {
+        if (!loopStates[type].active) return;
+        const audio = getAudioElement(type);
+        if (audio.currentTime >= loopStates[type].end) {
+            audio.currentTime = loopStates[type].start;
+            if(audio.paused) audio.play();
+        }
+    }
+</script>
+
+</body>
+</html>
