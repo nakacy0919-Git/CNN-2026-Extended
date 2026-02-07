@@ -45,26 +45,27 @@
             .nav-container, .app-container { display: none !important; }
         }
 
-        /* --- ナビゲーションバー (20個対応) --- */
+        /* --- ナビゲーションバー (20個 1列配列) --- */
         .nav-container {
             width: 100%;
-            height: 8vh; /* 2段になるため高さを倍増 */
-            min-height: 56px;
+            height: 5vh; /* 1列なので高さを少し抑える */
+            min-height: 32px;
             display: grid;
-            grid-template-columns: repeat(10, 1fr); /* 横10個 */
-            grid-template-rows: repeat(2, 1fr);    /* 縦2行 */
-            gap: 2px;
+            grid-template-columns: repeat(20, 1fr); /* 横20個均等割り */
+            grid-template-rows: 1fr;                /* 縦1行 */
+            gap: 1px;
             margin-bottom: 4px;
             flex-shrink: 0;
         }
         .nav-btn {
             background-color: #eee;
             border: 1px solid #fff;
-            border-radius: 4px;
+            border-radius: 3px;
             cursor: pointer;
             font-weight: bold;
             color: #555;
-            font-size: clamp(8px, 1.2vh, 12px); /* 文字サイズ微調整 */
+            /* 20個並べるため文字を小さく調整 */
+            font-size: clamp(6px, 1vh, 10px); 
             transition: 0.3s;
             padding: 0;
             display: flex;
@@ -75,7 +76,7 @@
         }
         .nav-btn:hover { background-color: #ffccbc; }
         
-        /* アクティブ時の色：パープル〜ピンク系 */
+        /* アクティブ時の色：パープル系 */
         .nav-btn.active {
             background: linear-gradient(135deg, #ba68c8, #8e24aa);
             color: white;
@@ -123,10 +124,10 @@
 
         .answer-box {
             position: absolute;
-            border: 4px solid #ff4081; /* 赤からピンク寄りの赤へ */
+            border: 4px solid #ab47bc; /* パープル系の枠に変更 */
             border-radius: 8px;
             display: none;
-            background-color: rgba(255, 64, 129, 0.2);
+            background-color: rgba(171, 71, 188, 0.2);
             cursor: pointer;
             z-index: 10;
         }
@@ -134,7 +135,7 @@
         /* --- リサイズハンドル --- */
         #drag-handle {
             width: 18px;
-            background: linear-gradient(to right, #ffe0b2, #ffcc80, #ffe0b2); /* オレンジ系 */
+            background: linear-gradient(to right, #e1bee7, #ce93d8, #e1bee7); /* 薄いパープル系 */
             cursor: col-resize;
             display: flex;
             justify-content: center;
@@ -142,15 +143,15 @@
             flex-shrink: 0;
             z-index: 100;
             touch-action: none;
-            border-left: 1px solid #ffb74d;
-            border-right: 1px solid #ffb74d;
+            border-left: 1px solid #ba68c8;
+            border-right: 1px solid #ba68c8;
         }
         #drag-handle::after {
             content: "";
             width: 4px;
             height: 30px;
-            border-left: 2px solid #ef6c00;
-            border-right: 2px solid #ef6c00;
+            border-left: 2px solid #8e24aa;
+            border-right: 2px solid #8e24aa;
         }
 
         /* --- 右側：サイドバー --- */
@@ -158,7 +159,7 @@
             width: 200px;
             min-width: 160px;
             max-width: 60%;
-            background-color: #fff3e0; /* 薄いオレンジ背景 */
+            background-color: #f3e5f5; /* 薄いパープル背景 */
             padding: 6px;
             display: flex;
             flex-direction: column;
@@ -213,7 +214,7 @@
 
         /* オーディオエリア */
         .audio-wrapper {
-            background-color: rgba(255,255,255,0.5);
+            background-color: rgba(255,255,255,0.6);
             border-radius: 6px;
             padding: 4px;
             margin-bottom: 2px;
@@ -228,11 +229,11 @@
             gap: 10px;
         }
         
-        /* 制御ボタン */
+        /* 制御ボタン (薄いグレー) */
         .ctrl-btn, .loop-btn {
-            background: linear-gradient(135deg, #8d6e63, #5d4037); /* ブラウン系 */
-            color: white;
-            border: 1px solid white;
+            background: linear-gradient(135deg, #f5f5f5, #e0e0e0); /* 薄いグレー */
+            color: #333; /* 文字色を濃く */
+            border: 1px solid #bbb;
             border-radius: 4px;
             flex: 1;
             padding: 14px 0;
@@ -240,69 +241,69 @@
             cursor: pointer;
             font-weight: bold;
             white-space: nowrap;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
             display: flex;
             justify-content: center;
             align-items: center;
             gap: 4px;
             flex-direction: column; 
+            text-shadow: none; /* 影なしで見やすく */
         }
         
         .stop-btn {
-            background: linear-gradient(135deg, #a1887f, #8d6e63);
+            background: linear-gradient(135deg, #eeeeee, #bdbdbd);
             flex: 1.5;
         }
-
-        .loop-btn {
-            background: linear-gradient(135deg, #bdbdbd, #9e9e9e);
-        }
         
+        /* コントロールボタン内のアイコンも濃い色に */
+        .ctrl-btn .icon-svg, .stop-btn .icon-svg, .loop-btn .icon-svg {
+            fill: #555;
+        }
+
         .loop-active {
-            background: #f8bbd0 !important; /* ピンク系ハイライト */
-            background-image: none !important;
-            color: #c2185b !important;
-            border: 2px solid #e91e63 !important;
-            text-shadow: none !important;
+            background: #ffccbc !important; /* アクティブ時は少し色をつける */
+            color: #d84315 !important;
+            border: 2px solid #ff7043 !important;
         }
 
         /* クイズ番号 */
         .quiz-controls {
             display: grid;
-            grid-template-columns: 1fr 1fr; /* 2つだけなので横並び */
+            grid-template-columns: 1fr 1fr;
             gap: 3px;
             margin-top: 2px;
         }
+
+        /* --- カラーパレット変更 --- */
+
+        /* Natural: さわやかなグリーン */
+        .btn-audio-nat { background: linear-gradient(135deg, #66bb6a, #43a047); }
+
+        /* Slow: オレンジグラデーション */
+        .btn-audio-slow { background: linear-gradient(135deg, #ffa726, #f57c00); }
+        
+        /* その他の学習ボタン（全てパープルグラデーション） */
+        .btn-point, 
+        .btn-script, 
+        .btn-vocab, 
+        .btn-japanese, 
+        .btn-compre, 
         .btn-num {
-            background: linear-gradient(135deg, #ff7043, #f4511e); /* オレンジ系 */
-            font-size: clamp(14px, 2.5vh, 20px);
-            font-weight: bold;
-            padding: clamp(6px, 1vh, 10px) 0;
-            border-radius: 4px;
-            color: white;
-            border: 2px solid white;
-            cursor: pointer;
-            box-shadow: 0 2px 3px rgba(0,0,0,0.2);
+            background: linear-gradient(135deg, #ab47bc, #7b1fa2); /* パープル */
+            margin-bottom: 1px;
         }
-
-        /* --- カラーパレット変更（ピンク・オレンジ・パープル系） --- */
-        .btn-audio-nat { background: linear-gradient(135deg, #ec407a, #d81b60); } /* ピンク */
-        .btn-audio-slow { background: linear-gradient(135deg, #ab47bc, #8e24aa); } /* パープル */
         
-        /* Script/Vocabなど */
-        .btn-point { background: linear-gradient(135deg, #ffca28, #ffb300); margin-bottom: 3px; color: #444; text-shadow:none;} /* 黄色/オレンジ */
-        .btn-script { background: linear-gradient(135deg, #ffa726, #fb8c00); margin-bottom: 1px;} /* オレンジ */
-        .btn-vocab { background: linear-gradient(135deg, #ff7043, #f4511e); margin-bottom: 1px;} /* 濃いオレンジ */
-        .btn-japanese { background: linear-gradient(135deg, #78909c, #546e7a); margin-bottom: 1px;} /* シックなグレー */
-        
-        .btn-compre { background: linear-gradient(135deg, #66bb6a, #43a047); } /* クイズだけ緑系を残すか、テーマに合わせるなら下 */
-        /* .btn-compre { background: linear-gradient(135deg, #26a69a, #00897b); } ティール系 */
+        /* Pointボタンの文字色調整（背景が濃い紫になったので白文字へ） */
+        .btn-point { color: white; text-shadow: 1px 1px 1px rgba(0,0,0,0.2); margin-bottom: 3px; }
+        .btn-point .icon-svg { fill: white; }
 
-        .btn-clear { background: linear-gradient(135deg, #78909c, #607d8b); margin-top: 2px; }
+        /* ALL CLEARボタン（少し色味を変えるか、統一するか） */
+        .btn-clear { background: linear-gradient(135deg, #78909c, #546e7a); margin-top: 2px; }
 
         hr {
             margin: 2px 0;
             border: 0;
-            border-top: 1px dashed #ffa07a;
+            border-top: 1px dashed #ce93d8;
             width: 100%;
             flex-shrink: 0;
         }
@@ -313,8 +314,6 @@
             fill: white;
             display: block;
         }
-        /* Get pointボタンは文字色が濃いのでアイコンも濃く */
-        .btn-point .icon-svg { fill: #444; }
 
     </style>
 </head>
@@ -336,7 +335,6 @@
         <button class="nav-btn" onclick="selectLesson('news8', this)">News 8</button>
         <button class="nav-btn" onclick="selectLesson('news9', this)">News 9</button>
         <button class="nav-btn" onclick="selectLesson('news10', this)">News 10</button>
-        
         <button class="nav-btn" onclick="selectLesson('news11', this)">News 11</button>
         <button class="nav-btn" onclick="selectLesson('news12', this)">News 12</button>
         <button class="nav-btn" onclick="selectLesson('news13', this)">News 13</button>
@@ -489,7 +487,6 @@
     };
 
     // --- News設定 (座標) ---
-    // ※Intensiveの1-10はそのままで、11-20は仮のデータを入れています
     const answerSettings = {
         news1: [ { top:'34%', left:'10%', width:'15%', height:'5%' }, { top:'48%', left:'53%', width:'35%', height:'5%' } ],
         news2: [ { top:'61%', left:'8%', width:'35%', height:'5%' }, { top:'36%', left:'53%', width:'35%', height:'5%' } ],
@@ -501,7 +498,7 @@
         news8: [ { top:'54%', left:'7%', width:'15%', height:'4%' }, { top:'49%', left:'54%', width:'23%', height:'4%' } ],
         news9: [ { top:'43%', left:'7%', width:'30%', height:'4%' }, { top:'38%', left:'53%', width:'30%', height:'4%' } ],
         news10: [ { top:'49%', left:'7%', width:'35%', height:'5%' }, { top:'44%', left:'52%', width:'25%', height:'4.5%' } ],
-        // 以下、Extended用ダミー（必要に応じて座標を調整してください）
+        // ダミーデータ
         news11: [ { top:'50%', left:'10%', width:'20%', height:'5%' }, { top:'50%', left:'60%', width:'20%', height:'5%' } ],
         news12: [ { top:'50%', left:'10%', width:'20%', height:'5%' }, { top:'50%', left:'60%', width:'20%', height:'5%' } ],
         news13: [ { top:'50%', left:'10%', width:'20%', height:'5%' }, { top:'50%', left:'60%', width:'20%', height:'5%' } ],
@@ -520,7 +517,7 @@
 
     const fileNames = {
         main: 'main.png',
-        point: 'point.png', // 新しく追加したGet the point用画像
+        point: 'point.png',
         transcript: 'transcript.png',
         newwords: 'newwords.png',
         japanese: 'japanese.png',
@@ -575,7 +572,6 @@
 
     function applyAnswerSettings(folder) {
         const settings = answerSettings[folder] || answerSettings['news1'];
-        // ボックスは2つだけ処理
         for(let i = 0; i < 2; i++) {
             if(settings[i]) {
                 answerBoxes[i].style.top = settings[i].top;
