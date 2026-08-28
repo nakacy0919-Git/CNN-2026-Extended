@@ -4,326 +4,201 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>CNN 2026 Extended Course</title>
+    
+    <!-- 外部ライブラリとデータ・スクリプトの読み込み -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script src="data.js"></script>
+    <script src="speech.js" defer></script> <!-- 音声認識機能を分離 -->
+
+    <!-- Firebase SDK の読み込み (compat版) -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
     <style>
-        /* --- 基本設定 --- */
+        /* =========================================
+           基本設定
+        ========================================= */
         html, body {
-            height: 100%;
-            width: 100%;
-            overflow: hidden; /* 全体のスクロールは禁止 */
-            margin: 0;
-            padding: 0;
-            font-family: "Helvetica Neue", Arial, sans-serif;
-            background-color: #fff0f5; /* 背景を薄いピンクに */
-            box-sizing: border-box;
+            height: 100%; width: 100%; overflow: hidden;
+            margin: 0; padding: 0; font-family: "Helvetica Neue", Arial, sans-serif;
+            background-color: #fcf9fd; box-sizing: border-box;
         }
+        body { display: flex; flex-direction: column; align-items: center; padding: 4px; }
 
-        body {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 4px;
-        }
-
-        /* --- 画面の向き警告 --- */
         #portraitWarning {
-            display: none;
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background-color: #ffe0e0;
-            z-index: 20000;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            color: #555;
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: #f3e5f5; z-index: 20000; flex-direction: column;
+            justify-content: center; align-items: center; text-align: center; color: #555;
         }
         #portraitWarning h2 { font-size: 24px; margin-bottom: 10px; }
-        
         @media screen and (orientation: portrait) {
             #portraitWarning { display: flex; }
             .nav-container, .app-container { display: none !important; }
         }
 
-        /* --- ナビゲーションバー (20個 1列配列) --- */
+        /* =========================================
+           ライセンスロック画面 CSS
+        ========================================= */
+        #authOverlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, #fcf9fd, #e1bee7);
+            z-index: 30000; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; text-align: center;
+        }
+        .auth-box {
+            background: white; padding: 40px; border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2); max-width: 400px; width: 90%;
+        }
+        .auth-box h2 { color: #8e24aa; margin-top: 0; }
+        .auth-box input {
+            width: 100%; padding: 12px; font-size: 18px; margin: 15px 0;
+            border: 2px solid #ce93d8; border-radius: 6px; box-sizing: border-box;
+            text-align: center; font-weight: bold;
+        }
+        .auth-box button {
+            background: linear-gradient(135deg, #ab47bc, #8e24aa); color: white;
+            border: none; padding: 12px 0; width: 100%; font-size: 18px;
+            font-weight: bold; border-radius: 6px; cursor: pointer; transition: 0.2s;
+        }
+        .auth-box button:hover { opacity: 0.9; }
+        #authError { color: #e91e63; font-weight: bold; margin-top: 10px; display: none; }
+
+        /* =========================================
+           ナビゲーションバー & メインレイアウト
+        ========================================= */
         .nav-container {
-            width: 100%;
-            height: 5vh; 
-            min-height: 32px;
-            display: grid;
-            grid-template-columns: repeat(20, 1fr); /* 横20個均等割り */
-            grid-template-rows: 1fr;                /* 縦1行 */
-            gap: 1px;
-            margin-bottom: 4px;
-            flex-shrink: 0;
+            width: 100%; height: 5vh; min-height: 36px; display: grid;
+            grid-template-columns: repeat(20, 1fr); gap: 2px; margin-bottom: 4px; flex-shrink: 0;
         }
         .nav-btn {
-            background-color: #eee;
-            border: 1px solid #fff;
-            border-radius: 3px;
-            cursor: pointer;
-            font-weight: bold;
-            color: #555;
-            font-size: clamp(6px, 1vh, 10px); 
-            transition: 0.3s;
-            padding: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            white-space: nowrap;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            background-color: #eee; border: 1px solid #fff; border-radius: 4px;
+            cursor: pointer; font-weight: bold; color: #555; font-size: clamp(6px, 0.9vh, 10px);
+            transition: 0.3s; padding: 0; display: flex; align-items: center; justify-content: center; 
+            white-space: nowrap; box-shadow: 0 1px 2px rgba(0,0,0,0.1);
         }
-        .nav-btn:hover { background-color: #ffccbc; }
-        
-        /* アクティブ時の色：パープル系 */
-        .nav-btn.active {
-            background: linear-gradient(135deg, #ba68c8, #8e24aa);
-            color: white;
-            border: 1px solid white;
-        }
+        .nav-btn:hover { background-color: #e1bee7; }
+        .nav-btn.active { background: linear-gradient(135deg, #ab47bc, #8e24aa); color: white; border: 1px solid white; }
 
-        /* --- アプリ本体 --- */
         .app-container {
-            width: 100%;
-            flex-grow: 1; 
-            background-color: white;
-            display: flex;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-            border-radius: 8px;
-            overflow: hidden;
-            margin-bottom: 0;
-            position: relative; 
-            /* PC画面等で高さが十分ある場合はそのまま */
+            width: 100%; flex-grow: 1; background-color: white; display: flex;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2); border-radius: 8px; overflow: hidden; position: relative; 
         }
+        .main-screen { flex-grow: 1; width: 0; position: relative; background-color: #000; overflow: hidden; min-width: 20%; }
+        #bgLayer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: fill; z-index: 1; }
+        #contentLayer { position: absolute; top: 17%; left: 2.5%; width: 95%; height: 80%; object-fit: fill; display: none; z-index: 2; }
+        .answer-box { position: absolute; border: 4px solid #ab47bc; border-radius: 8px; display: none; background-color: rgba(171, 71, 188, 0.2); cursor: pointer; z-index: 10; }
 
-        /* 左側：メイン画面 */
-        .main-screen {
-            flex-grow: 1;
-            width: 0;
-            position: relative;
-            background-color: #000;
-            overflow: hidden;
-            min-width: 20%;
-        }
-
-        #bgLayer {
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            object-fit: fill;
-            z-index: 1;
-        }
-        #contentLayer {
-            position: absolute;
-            top: 17%; left: 2.5%; 
-            width: 95%; height: 80%;
-            object-fit: fill;
-            display: none;
-            z-index: 2;
-        }
-
-        .answer-box {
-            position: absolute;
-            border: 4px solid #ab47bc; 
-            border-radius: 8px;
-            display: none;
-            background-color: rgba(171, 71, 188, 0.2);
-            cursor: pointer;
-            z-index: 10;
-        }
-
-        /* --- リサイズハンドル --- */
         #drag-handle {
-            width: 18px;
-            background: linear-gradient(to right, #e1bee7, #ce93d8, #e1bee7);
-            cursor: col-resize;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            flex-shrink: 0;
-            z-index: 100;
-            touch-action: none;
-            border-left: 1px solid #ba68c8;
-            border-right: 1px solid #ba68c8;
+            width: 18px; background: linear-gradient(to right, #f3e5f5, #e1bee7, #f3e5f5); cursor: col-resize; 
+            display: flex; justify-content: center; align-items: center; flex-shrink: 0; z-index: 100; touch-action: none;
+            border-left: 1px solid #ce93d8; border-right: 1px solid #ce93d8;
         }
-        #drag-handle::after {
-            content: "";
-            width: 4px;
-            height: 30px;
-            border-left: 2px solid #8e24aa;
-            border-right: 2px solid #8e24aa;
-        }
+        #drag-handle::after { content: ""; width: 4px; height: 30px; border-left: 2px solid #9c27b0; border-right: 2px solid #9c27b0; }
 
-        /* --- 右側：サイドバー --- */
         .sidebar {
-            width: 200px;
-            min-width: 160px;
-            max-width: 60%;
-            background-color: #f3e5f5;
-            padding: 6px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            gap: 2px;
-            flex-shrink: 0;
-            height: 100%;
-            box-sizing: border-box;
-            
-            /* 【重要】iPad/タブレット対策: 縦幅が足りない時はスクロールさせる */
-            overflow-y: auto; 
-            min-height: 0; /* Flexboxの子要素でスクロールさせるために必要 */
+            width: 200px; min-width: 160px; max-width: 60%; background-color: #f4eef5; padding: 6px; 
+            display: flex; flex-direction: column; justify-content: space-between; gap: 2px; overflow: hidden; 
+            flex-shrink: 0; height: 100%; box-sizing: border-box;
         }
+        .sidebar-group { width: 100%; display: flex; flex-direction: column; gap: 2px; flex-shrink: 1; }
+        .group-flexible { flex-grow: 1; justify-content: center; }
 
-        .sidebar-group {
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
-            flex-shrink: 0; /* 縮ませない */
-        }
-
-        .group-flexible {
-            flex-grow: 1; 
-            justify-content: center;
-            flex-shrink: 1; /* ここだけ縮んでOK */
-        }
-
-        /* 共通ボタンスタイル */
+        /* =========================================
+           サイドバーのボタン・UI
+        ========================================= */
         .btn {
-            border: 2px solid white;
-            border-radius: 6px;
-            cursor: pointer;
-            color: white;
-            font-weight: 900;
-            /* 縦幅を節約しつつ、文字サイズを確保 */
-            font-size: clamp(10px, 1.8vh, 16px);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.1s;
-            width: 100%;
-            /* 縦方向のパディングを少し詰めつつ、画面サイズに追従させる */
-            padding: clamp(4px, 1vh, 10px) 0;
-            white-space: nowrap;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.15);
-            text-shadow: 1px 1px 1px rgba(0,0,0,0.2);
+            border: 2px solid white; border-radius: 6px; cursor: pointer; color: white; font-weight: 900; 
+            font-size: clamp(10px, 2vh, 16px); display: flex; justify-content: center; align-items: center; gap: 8px; 
+            transition: all 0.1s; width: 100%; padding: clamp(6px, 1.2vh, 10px) 0; white-space: nowrap;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.15); text-shadow: 1px 1px 1px rgba(0,0,0,0.2); flex-shrink: 1; 
         }
         .btn:hover { opacity: 0.9; transform: translateY(-1px); }
         .btn:active { transform: translateY(1px); }
 
-        /* 再生ボタン専用 (大きく) */
-        .btn-audio-nat, .btn-audio-slow {
-            font-size: clamp(14px, 2.5vh, 20px) !important;
-        }
-
-        /* 数字ボタン「1」「2」専用 (前回の大きさに戻す設定) */
-        .btn-num {
-            /* 通常ボタンより文字も余白も大きくする */
-            font-size: clamp(14px, 2.5vh, 20px) !important;
-            padding: clamp(6px, 1.5vh, 12px) 0 !important;
-        }
-
-        /* オーディオエリア */
-        .audio-wrapper {
-            background-color: rgba(255,255,255,0.6);
-            border-radius: 6px;
-            padding: 4px;
-            margin-bottom: 2px;
-            box-shadow: inset 0 0 3px rgba(0,0,0,0.1);
-        }
+        .audio-wrapper { background-color: rgba(255,255,255,0.6); border-radius: 6px; padding: 4px; margin-bottom: 2px; box-shadow: inset 0 0 3px rgba(0,0,0,0.1); flex-shrink: 1; }
+        .btn-audio-nat, .btn-audio-slow { font-size: clamp(14px, 2.5vh, 20px) !important; }
+        .audio-controls, .loop-controls { display: flex; justify-content: space-between; margin-top: 4px; gap: 10px; }
         
-        .audio-controls, .loop-controls {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 4px;
-            gap: 10px;
-        }
-        
-        /* 制御ボタン (薄いグレー) */
+        /* 制御ボタンをライトグレーの立体デザインに */
         .ctrl-btn, .loop-btn {
-            background: linear-gradient(135deg, #f5f5f5, #e0e0e0);
-            color: #333;
-            border: 1px solid #bbb;
-            border-radius: 4px;
-            flex: 1;
-            padding: 12px 0; /* 少しパディング確保 */
-            font-size: clamp(9px, 1.2vh, 12px);
-            cursor: pointer;
-            font-weight: bold;
-            white-space: nowrap;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 4px;
-            flex-direction: column; 
-            text-shadow: none;
+            background: linear-gradient(to bottom, #ffffff, #e6e6e6); color: #444 !important; border: 1px solid #ccc;
+            border-radius: 4px; flex: 1; padding: 14px 0; font-size: clamp(9px, 1.2vh, 12px); cursor: pointer; font-weight: bold; 
+            white-space: nowrap; box-shadow: 0 1px 2px rgba(0,0,0,0.1); display: flex; justify-content: center; align-items: center; 
+            gap: 4px; flex-direction: column; text-shadow: none; 
         }
+        .ctrl-btn .icon-svg { fill: #444; }
+        .stop-btn { background: linear-gradient(to bottom, #ffffff, #dcdcdc); flex: 1.5; }
         
-        .stop-btn {
-            background: linear-gradient(135deg, #eeeeee, #bdbdbd);
-            flex: 1.5;
-        }
-        
-        .ctrl-btn .icon-svg, .stop-btn .icon-svg, .loop-btn .icon-svg {
-            fill: #555;
-        }
-
         .loop-active {
-            background: #ffccbc !important;
-            color: #d84315 !important;
-            border: 2px solid #ff7043 !important;
+            background: #e1bee7 !important; background-image: none !important; color: #8e24aa !important;
+            border: 2px solid #ab47bc !important; text-shadow: none !important;
         }
-
-        /* クイズ番号 */
-        .quiz-controls {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 3px;
-            margin-top: 2px;
-        }
-
-        /* --- カラーパレット --- */
-
-        /* Natural: グリーン */
-        .btn-audio-nat { background: linear-gradient(135deg, #66bb6a, #43a047); }
-
-        /* Slow: オレンジ */
-        .btn-audio-slow { background: linear-gradient(135deg, #ffa726, #f57c00); }
-        
-        /* その他の学習ボタン（パープル） */
-        .btn-point, 
-        .btn-script, 
-        .btn-vocab, 
-        .btn-japanese, 
-        .btn-compre, 
+        .quiz-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; margin-top: 2px; }
         .btn-num {
-            background: linear-gradient(135deg, #ab47bc, #7b1fa2);
-            margin-bottom: 1px;
+            background: linear-gradient(135deg, #ab47bc, #8e24aa); font-size: clamp(14px, 2.5vh, 20px);
+            font-weight: bold; padding: clamp(6px, 1vh, 10px) 0; border-radius: 4px; color: white;
+            border: 2px solid white; cursor: pointer; box-shadow: 0 2px 3px rgba(0,0,0,0.2);
+        }
+
+        /* --- カラーパレット設定 --- */
+        .btn-audio-nat  { background: #5cb85c; text-shadow: 1px 1px 2px rgba(0,0,0,0.2); } 
+        .btn-audio-slow { background: #f0ad4e; text-shadow: 1px 1px 2px rgba(0,0,0,0.2); } 
+        .btn-point      { background: linear-gradient(135deg, #ab47bc, #8e24aa); margin-bottom: 3px; color: white;} 
+        .btn-script     { background: linear-gradient(135deg, #ab47bc, #8e24aa); margin-bottom: 1px;} 
+        .btn-vocab      { background: linear-gradient(135deg, #ab47bc, #8e24aa); margin-bottom: 1px;} 
+        .btn-japanese   { background: linear-gradient(135deg, #ab47bc, #8e24aa); margin-bottom: 1px;} 
+        .btn-reading    { background: linear-gradient(135deg, #e91e63, #c2185b); margin-top: 2px; color: white; } 
+        .btn-compre     { background: linear-gradient(135deg, #ab47bc, #8e24aa); } 
+        .btn-clear      { background: linear-gradient(135deg, #78909c, #546e7a); margin-top: 2px; }
+        hr { margin: 2px 0; border: 0; border-top: 1px dashed #ce93d8; width: 100%; flex-shrink: 0; }
+        .icon-svg { width: 24px; height: 24px; fill: white; display: block; }
+
+        /* =========================================
+           音読モーダル & 半円ゲージ CSS (大型化)
+        ========================================= */
+        .modal-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.7); z-index: 1000; justify-content: center; align-items: center;
+        }
+        .modal-content {
+            background: white; width: 95%; max-width: 1200px; height: 90vh;
+            border-radius: 12px; padding: 30px; display: flex; flex-direction: column;
+            position: relative; box-shadow: 0 15px 40px rgba(0,0,0,0.4); overflow: hidden;
+        }
+        .close-btn {
+            position: absolute; top: 20px; right: 25px; background: none; border: none;
+            font-size: 32px; cursor: pointer; color: #888; transition: 0.2s;
+        }
+        .close-btn:hover { color: #e91e63; }
+        
+        .mode-selector { display: flex; gap: 15px; margin-bottom: 15px; flex-shrink: 0; }
+        .btn-mode { background: #e0e0e0; color: #555; font-size: 20px; padding: 10px 0;}
+        .btn-mode.active { background: linear-gradient(135deg, #ab47bc, #8e24aa); color: white; }
+        .hidden { display: none !important; }
+        #shadowing-options { margin-bottom: 15px; font-weight: bold; color: #555; flex-shrink: 0; font-size: 18px;}
+        
+        .transcript-display {
+            flex-grow: 1; background: #fcf9fd; border: 3px dashed #ce93d8; border-radius: 8px;
+            padding: 20px; overflow-y: auto; font-size: 26px; line-height: 1.8; color: #333; margin-bottom: 15px; font-weight: bold;
+        }
+        .user-speech-display {
+            min-height: 80px; background: #fff3e0; border-radius: 8px; padding: 15px;
+            color: #ef6c00; font-size: 22px; margin-bottom: 15px; font-style: italic; flex-shrink: 0; overflow-y: auto; border: 2px solid #ffcc80;
         }
         
-        .btn-point { color: white; text-shadow: 1px 1px 1px rgba(0,0,0,0.2); margin-bottom: 3px; }
-        .btn-point .icon-svg { fill: white; }
-
-        /* ALL CLEARボタン */
-        .btn-clear { background: linear-gradient(135deg, #78909c, #546e7a); margin-top: 2px; }
-
-        hr {
-            margin: 2px 0;
-            border: 0;
-            border-top: 1px dashed #ce93d8;
-            width: 100%;
-            flex-shrink: 0;
-        }
+        .mic-controls { display: flex; justify-content: center; margin-bottom: 15px; flex-shrink: 0; }
+        .btn-mic { background: linear-gradient(135deg, #e91e63, #c2185b); width: 250px; font-size: 24px; padding: 12px 0; border-radius: 40px;} 
         
-        .icon-svg {
-            width: 24px;
-            height: 24px;
-            fill: white;
-            display: block;
+        .result-area { text-align: center; display: none; margin-top: 5px; flex-shrink: 0;}
+        .gauge-container { position: relative; width: 220px; margin: 0 auto; }
+        .gauge-svg { width: 100%; height: auto; }
+        .gauge-bg { fill: none; stroke: #eee; stroke-width: 12; stroke-linecap: round; }
+        .gauge-fill { 
+            fill: none; stroke: #ab47bc; stroke-width: 12; stroke-linecap: round;
+            stroke-dasharray: 126; stroke-dashoffset: 126; transition: stroke-dashoffset 1s ease-out;
         }
-
+        .gauge-text { position: absolute; bottom: 0; left: 0; width: 100%; text-align: center; font-size: 40px; font-weight: 900; color: #8e24aa; line-height: 1; }
+        .feedback-msg { font-size: 24px; font-weight: bold; margin-top: 10px; }
     </style>
 </head>
 <body>
@@ -333,6 +208,18 @@
         <p>Please rotate your device to landscape mode.</p>
     </div>
 
+    <!-- ライセンスキー入力画面 -->
+    <div id="authOverlay">
+        <div class="auth-box">
+            <h2>CNN Extended Course</h2>
+            <p>ライセンスキーを入力してください</p>
+            <input type="text" id="licenseInput" placeholder="例: class001">
+            <button onclick="checkLicense()">学習をスタート</button>
+            <p id="authError">キーが正しくないか、使用済みです。</p>
+        </div>
+    </div>
+
+    <!-- ナビゲーション -->
     <div class="nav-container">
         <button class="nav-btn active" onclick="selectLesson('news1', this)">News 1</button>
         <button class="nav-btn" onclick="selectLesson('news2', this)">News 2</button>
@@ -356,8 +243,9 @@
         <button class="nav-btn" onclick="selectLesson('news20', this)">News 20</button>
     </div>
 
+    <!-- アプリ本体 -->
     <div class="app-container" id="appContainer">
-        
+        <!-- メイン画面 -->
         <div class="main-screen" id="mainScreen">
             <img id="bgLayer" src="" alt="Background">
             <img id="contentLayer" src="" alt="Content">
@@ -365,10 +253,11 @@
             <div id="ans2" class="answer-box"></div>
         </div>
 
+        <!-- リサイズハンドル -->
         <div id="drag-handle"></div>
 
+        <!-- サイドバー -->
         <div class="sidebar" id="sidebar">
-            
             <div class="sidebar-group">
                 <div class="audio-wrapper">
                     <button class="btn btn-audio-nat" id="btn-main-natural" onclick="togglePlayPause('natural')">
@@ -419,15 +308,18 @@
 
             <hr>
 
+            <!-- レイヤー切り替え & 音読ボタン -->
             <div class="sidebar-group group-flexible">
                 <button class="btn btn-point" onclick="toggleSlide('point')">
                     Get the point <svg class="icon-svg" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
                 </button>
-                
                 <button class="btn btn-script" onclick="toggleSlide('transcript')">Script</button>
                 <button class="btn btn-script" onclick="toggleSlide('newwords')">Vocabulary</button>
                 <button class="btn btn-vocab" onclick="toggleMainAudio('vocab')">Pronunciation 🎧</button>
                 <button class="btn btn-japanese" onclick="toggleSlide('japanese')">Japanese</button>
+                
+                <!-- 音読練習ボタン -->
+                <button class="btn btn-reading" onclick="openReadingMode()">Reading 🎤</button>
             </div>
 
             <hr>
@@ -435,41 +327,165 @@
             <div class="sidebar-group">
                 <button class="btn btn-compre" onclick="toggleSlide('compre')">Comprehension</button>
                 <div class="quiz-controls">
-                    <button class="btn btn-num" onclick="toggleAnswer(1)">1</button>
-                    <button class="btn btn-num" onclick="toggleAnswer(2)">2</button>
+                    <button class="btn-num" onclick="toggleAnswer(1)">1</button>
+                    <button class="btn-num" onclick="toggleAnswer(2)">2</button>
                 </div>
                 <button class="btn btn-clear" onclick="clearAllAnswers()">ALL CLEAR</button>
             </div>
         </div>
     </div>
 
+    <!-- オーディオ要素 -->
     <audio id="audioNatural"></audio>
     <audio id="audioSlow"></audio>
     <audio id="audioVocab"></audio>
+    
+    <!-- 80%超え時の効果音 -->
+    <audio id="successSound" src="success-fanfare.mp3"></audio> 
+
+    <!-- 音読機能モーダル (大型化・ボタン統合済) -->
+    <div id="readingModal" class="modal-overlay">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeReadingModal()">✖</button>
+            <h2 style="margin-top:0; color:#ab47bc; font-size:32px;">Reading Practice 🎤</h2>
+            
+            <div class="mode-selector">
+                <button class="btn btn-mode active" id="btn-readaloud" onclick="setReadingMode('readaloud')">Read Aloud</button>
+                <button class="btn btn-mode" id="btn-shadowing" onclick="setReadingMode('shadowing')">Shadowing</button>
+            </div>
+            
+            <div id="shadowing-options" class="hidden">
+                <label><input type="radio" name="shadowSpeed" value="natural" checked> Natural Speed</label>
+                &nbsp;&nbsp;&nbsp;&nbsp;
+                <label><input type="radio" name="shadowSpeed" value="slow"> Slow Speed</label>
+            </div>
+
+            <div class="transcript-display" id="targetText"></div>
+            <div class="user-speech-display" id="userSpeechText"></div>
+
+            <!-- トグル式マイクボタン -->
+            <div class="mic-controls">
+                <button class="btn btn-mic" id="toggleMicBtn" onclick="toggleReading()">Start 🎤</button>
+            </div>
+
+            <div class="result-area" id="resultArea">
+                <div class="gauge-container">
+                    <svg viewBox="0 0 100 50" class="gauge-svg">
+                        <path class="gauge-bg" d="M 10 50 A 40 40 0 0 1 90 50" />
+                        <path class="gauge-fill" id="gaugeFill" d="M 10 50 A 40 40 0 0 1 90 50" />
+                    </svg>
+                    <div class="gauge-text">
+                        <span id="accuracyScore">0</span>%
+                    </div>
+                </div>
+                <p id="feedbackMsg" class="feedback-msg"></p>
+            </div>
+        </div>
+    </div>
 
 <script>
+    // =========================================
+    // Firebase ライセンス認証システム
+    // =========================================
+    const firebaseConfig = {
+        apiKey: "AIzaSyBFE6MrD3DlVmHytTXcSQGVyj99gQHypAA",
+        authDomain: "cnn-extended-auth.firebaseapp.com",
+        projectId: "cnn-extended-auth",
+        storageBucket: "cnn-extended-auth.firebasestorage.app",
+        messagingSenderId: "425268054691",
+        appId: "1:425268054691:web:43ab37a98406df91d74d16"
+    };
+
+    // Firebaseの初期化
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    // 画面読み込み時にチェック
+    window.addEventListener('DOMContentLoaded', async () => {
+        const savedKey = localStorage.getItem('cnnLicenseKey');
+        const savedDeviceId = localStorage.getItem('cnnDeviceId');
+
+        if (savedKey && savedDeviceId) {
+            // すでにログイン済みの場合は、裏側でキーを再確認
+            const docRef = db.collection("licenses").doc(savedKey);
+            const docSnap = await docRef.get();
+            if (docSnap.exists && docSnap.data().deviceId === savedDeviceId) {
+                // 認証成功：ロック画面を消す
+                document.getElementById('authOverlay').style.display = 'none';
+            } else {
+                // 端末が違う、またはキーが削除された場合
+                localStorage.removeItem('cnnLicenseKey');
+            }
+        }
+    });
+
+    // 「学習をスタート」ボタンを押したときの処理
+    async function checkLicense() {
+        const inputKey = document.getElementById('licenseInput').value.trim();
+        const errorMsg = document.getElementById('authError');
+        if (!inputKey) return;
+
+        try {
+            const docRef = db.collection("licenses").doc(inputKey);
+            const docSnap = await docRef.get();
+
+            if (docSnap.exists) {
+                const data = docSnap.data();
+                
+                // 初回入力（まだどの端末にも紐づいていない）の場合
+                if (!data.deviceId || data.deviceId === "") {
+                    // ランダムな端末IDを作成して保存
+                    const newDeviceId = "device_" + Math.random().toString(36).substr(2, 9);
+                    await docRef.update({ deviceId: newDeviceId });
+                    
+                    localStorage.setItem('cnnLicenseKey', inputKey);
+                    localStorage.setItem('cnnDeviceId', newDeviceId);
+                    
+                    document.getElementById('authOverlay').style.display = 'none';
+                } 
+                // すでに誰かが使っている場合
+                else {
+                    const myDeviceId = localStorage.getItem('cnnDeviceId');
+                    // 自分の端末なら通す
+                    if (data.deviceId === myDeviceId) {
+                        localStorage.setItem('cnnLicenseKey', inputKey);
+                        document.getElementById('authOverlay').style.display = 'none';
+                    } else {
+                        // 別の端末で使われている
+                        errorMsg.innerText = "このキーは別の端末ですでに使用されています。";
+                        errorMsg.style.display = "block";
+                    }
+                }
+            } else {
+                errorMsg.innerText = "無効なライセンスキーです。";
+                errorMsg.style.display = "block";
+            }
+        } catch (error) {
+            console.error("エラー:", error);
+            errorMsg.innerText = "通信エラーが発生しました。インターネット接続を確認してください。";
+            errorMsg.style.display = "block";
+        }
+    }
+
+    // =========================================
+    // UI処理とメインロジック
+    // =========================================
     const iconPlay = '<svg class="icon-svg" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>';
     const iconPause = '<svg class="icon-svg" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>';
 
-    // --- ドラッグサイズ調整 ---
     const dragHandle = document.getElementById('drag-handle');
     const sidebar = document.getElementById('sidebar');
     const appContainer = document.getElementById('appContainer');
     let isResizing = false;
 
     dragHandle.addEventListener('mousedown', startResize);
-    dragHandle.addEventListener('touchstart', startResize, {passive: false});
+    dragHandle.addEventListener('touchstart', startResize, { passive: false });
 
     function startResize(e) {
-        e.preventDefault();
-        isResizing = true;
-        document.body.style.cursor = 'col-resize';
-        document.addEventListener('mousemove', resize);
-        document.addEventListener('touchmove', resize, {passive: false});
-        document.addEventListener('mouseup', stopResize);
-        document.addEventListener('touchend', stopResize);
+        e.preventDefault(); isResizing = true; document.body.style.cursor = 'col-resize';
+        document.addEventListener('mousemove', resize); document.addEventListener('touchmove', resize, { passive: false });
+        document.addEventListener('mouseup', stopResize); document.addEventListener('touchend', stopResize);
     }
-
     function resize(e) {
         if (!isResizing) return;
         const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
@@ -479,35 +495,34 @@
         if (newSidebarWidth > containerRect.width * 0.7) newSidebarWidth = containerRect.width * 0.7;
         sidebar.style.width = newSidebarWidth + 'px';
     }
-
     function stopResize() {
-        isResizing = false;
-        document.body.style.cursor = 'default';
-        document.removeEventListener('mousemove', resize);
-        document.removeEventListener('touchmove', resize);
-        document.removeEventListener('mouseup', stopResize);
-        document.removeEventListener('touchend', stopResize);
+        isResizing = false; document.body.style.cursor = 'default';
+        document.removeEventListener('mousemove', resize); document.removeEventListener('touchmove', resize);
+        document.removeEventListener('mouseup', stopResize); document.removeEventListener('touchend', stopResize);
     }
 
-    // --- オーディオ＆ループ変数 ---
-    const loopStates = {
-        natural: { start: null, end: null, active: false },
-        slow: { start: null, end: null, active: false }
+    const loopStates = { natural: { start: null, end: null, active: false }, slow: { start: null, end: null, active: false } };
+    let currentFolder = 'news1'; 
+    let currentAudioType = null;
+    let activeSlideType = null;
+
+    const fileNames = {
+        main: 'main.png', point: 'point.png', transcript: 'transcript.png',
+        newwords: 'newwords.png', japanese: 'japanese.png', compre: 'compre.png',
+        natural: 'natural.mp3', slow: 'slow.mp3', vocab: 'vocab.mp3'
     };
 
-    // --- News設定 (座標) ---
     const answerSettings = {
-        news1: [ { top:'34%', left:'10%', width:'15%', height:'5%' }, { top:'48%', left:'53%', width:'35%', height:'5%' } ],
-        news2: [ { top:'61%', left:'8%', width:'35%', height:'5%' }, { top:'36%', left:'53%', width:'35%', height:'5%' } ],
-        news3: [ { top:'48%', left:'9%', width:'17%', height:'4%' }, { top:'44%', left:'53%', width:'35%', height:'8%' } ],
-        news4: [ { top:'56%', left:'7%', width:'23%', height:'4%' }, { top:'37%', left:'52%', width:'25%', height:'4%' } ],
-        news5: [ { top:'48%', left:'7%', width:'10%', height:'4%' }, { top:'53%', left:'47%', width:'48%', height:'10%' } ],
-        news6: [ { top:'40%', left:'7%', width:'20%', height:'5%' }, { top:'59%', left:'40%', width:'50%', height:'9%' } ],
-        news7: [ { top:'59%', left:'7%', width:'40%', height:'4%' }, { top:'35%', left:'53%', width:'40%', height:'5%' } ],
-        news8: [ { top:'54%', left:'7%', width:'15%', height:'4%' }, { top:'49%', left:'54%', width:'23%', height:'4%' } ],
-        news9: [ { top:'43%', left:'7%', width:'30%', height:'4%' }, { top:'38%', left:'53%', width:'30%', height:'4%' } ],
+        news1:  [ { top:'34%', left:'10%', width:'15%', height:'5%' }, { top:'48%', left:'53%', width:'35%', height:'5%' } ],
+        news2:  [ { top:'61%', left:'8%', width:'35%', height:'5%' }, { top:'36%', left:'53%', width:'35%', height:'5%' } ],
+        news3:  [ { top:'48%', left:'9%', width:'17%', height:'4%' }, { top:'44%', left:'53%', width:'35%', height:'8%' } ],
+        news4:  [ { top:'56%', left:'7%', width:'23%', height:'4%' }, { top:'37%', left:'52%', width:'25%', height:'4%' } ],
+        news5:  [ { top:'48%', left:'7%', width:'10%', height:'4%' }, { top:'53%', left:'47%', width:'48%', height:'10%' } ],
+        news6:  [ { top:'40%', left:'7%', width:'20%', height:'5%' }, { top:'59%', left:'40%', width:'50%', height:'9%' } ],
+        news7:  [ { top:'59%', left:'7%', width:'40%', height:'4%' }, { top:'35%', left:'53%', width:'40%', height:'5%' } ],
+        news8:  [ { top:'54%', left:'7%', width:'15%', height:'4%' }, { top:'49%', left:'54%', width:'23%', height:'4%' } ],
+        news9:  [ { top:'43%', left:'7%', width:'30%', height:'4%' }, { top:'38%', left:'53%', width:'30%', height:'4%' } ],
         news10: [ { top:'49%', left:'7%', width:'35%', height:'5%' }, { top:'44%', left:'52%', width:'25%', height:'4.5%' } ],
-        // ダミーデータ
         news11: [ { top:'50%', left:'10%', width:'20%', height:'5%' }, { top:'50%', left:'60%', width:'20%', height:'5%' } ],
         news12: [ { top:'50%', left:'10%', width:'20%', height:'5%' }, { top:'50%', left:'60%', width:'20%', height:'5%' } ],
         news13: [ { top:'50%', left:'10%', width:'20%', height:'5%' }, { top:'50%', left:'60%', width:'20%', height:'5%' } ],
@@ -520,42 +535,20 @@
         news20: [ { top:'50%', left:'10%', width:'20%', height:'5%' }, { top:'50%', left:'60%', width:'20%', height:'5%' } ]
     };
 
-    let currentFolder = 'news1'; 
-    let currentAudioType = null;
-    let activeSlideType = null;
-
-    const fileNames = {
-        main: 'main.png',
-        point: 'point.png',
-        transcript: 'transcript.png',
-        newwords: 'newwords.png',
-        japanese: 'japanese.png',
-        compre: 'compre.png',
-        natural: 'natural.mp3',
-        slow: 'slow.mp3',
-        vocab: 'vocab.mp3'
-    };
-
     const bgLayer = document.getElementById('bgLayer');
     const contentLayer = document.getElementById('contentLayer');
     const audioNat = document.getElementById('audioNatural');
     const audioSlow = document.getElementById('audioSlow');
     const audioVocab = document.getElementById('audioVocab');
     const navBtns = document.querySelectorAll('.nav-btn');
-    const answerBoxes = [
-        document.getElementById('ans1'),
-        document.getElementById('ans2')
-    ];
+    const answerBoxes = [ document.getElementById('ans1'), document.getElementById('ans2') ];
 
     audioNat.addEventListener('timeupdate', () => checkLoop('natural'));
     audioSlow.addEventListener('timeupdate', () => checkLoop('slow'));
     audioNat.addEventListener('ended', () => updatePlayButtonUI('natural', false));
     audioSlow.addEventListener('ended', () => updatePlayButtonUI('slow', false));
     audioVocab.addEventListener('ended', () => { if(currentAudioType === 'vocab') currentAudioType = null; });
-
-    window.onload = function() {
-        loadLesson(currentFolder);
-    };
+    window.onload = () => loadLesson(currentFolder);
 
     function selectLesson(folderName, btnElement) {
         currentFolder = folderName;
@@ -563,207 +556,91 @@
         btnElement.classList.add('active');
         loadLesson(folderName);
     }
-
     function loadLesson(folder) {
         bgLayer.src = `${folder}/${fileNames.main}`;
-        contentLayer.style.display = 'none';
-        contentLayer.src = ''; 
-        activeSlideType = null;
-
+        contentLayer.style.display = 'none'; contentLayer.src = ''; activeSlideType = null;
         audioNat.src = `${folder}/${fileNames.natural}`;
         audioSlow.src = `${folder}/${fileNames.slow}`;
         audioVocab.src = `${folder}/${fileNames.vocab}`;
-        
-        stopAllAudio();
-        clearAllAnswers();
-        applyAnswerSettings(folder);
+        stopAllAudio(); clearAllAnswers(); applyAnswerSettings(folder);
     }
-
     function applyAnswerSettings(folder) {
         const settings = answerSettings[folder] || answerSettings['news1'];
         for(let i = 0; i < 2; i++) {
             if(settings[i]) {
-                answerBoxes[i].style.top = settings[i].top;
-                answerBoxes[i].style.left = settings[i].left;
-                answerBoxes[i].style.width = settings[i].width;
-                answerBoxes[i].style.height = settings[i].height;
+                answerBoxes[i].style.top = settings[i].top; answerBoxes[i].style.left = settings[i].left;
+                answerBoxes[i].style.width = settings[i].width; answerBoxes[i].style.height = settings[i].height;
             }
         }
     }
-
     function toggleSlide(type) {
-        if (activeSlideType === type) {
-            contentLayer.style.display = 'none';
-            activeSlideType = null;
-        } else {
-            if(fileNames[type]) {
-                contentLayer.src = `${currentFolder}/${fileNames[type]}`;
-                contentLayer.style.display = 'block';
-                activeSlideType = type;
-            }
+        if (activeSlideType === type) { contentLayer.style.display = 'none'; activeSlideType = null; } 
+        else {
+            if(fileNames[type]) { contentLayer.src = `${currentFolder}/${fileNames[type]}`; contentLayer.style.display = 'block'; activeSlideType = type; }
         }
         if (type !== 'compre') hideAnswerBoxes();
     }
-
-    function hideAnswerBoxes() {
-        answerBoxes.forEach(box => {
-            box.style.display = 'none';
-        });
-    }
-
+    function hideAnswerBoxes() { answerBoxes.forEach(box => box.style.display = 'none'); }
     function togglePlayPause(type) {
         let target = getAudioElement(type);
         if (!target) return;
-
         if (currentAudioType && currentAudioType !== type) {
             let other = getAudioElement(currentAudioType);
-            if(other) {
-                other.pause();
-                updatePlayButtonUI(currentAudioType, false);
-            }
+            if(other) { other.pause(); updatePlayButtonUI(currentAudioType, false); }
         }
-
         if (target.paused) {
-            target.play().catch(e => console.log(e));
-            currentAudioType = type;
-            updatePlayButtonUI(type, true);
-        } else {
-            target.pause();
-            updatePlayButtonUI(type, false);
-        }
+            target.play().catch(e => console.log(e)); currentAudioType = type; updatePlayButtonUI(type, true);
+        } else { target.pause(); updatePlayButtonUI(type, false); }
     }
-
     function toggleMainAudio(type) {
         let target = getAudioElement(type);
         if (!target) return;
-        
         if (currentAudioType && currentAudioType !== type) {
             let other = getAudioElement(currentAudioType);
-            if(other) {
-                other.pause();
-                updatePlayButtonUI(currentAudioType, false);
-            }
+            if(other) { other.pause(); updatePlayButtonUI(currentAudioType, false); }
         }
-
         if (!target.paused && currentAudioType === type) {
-            target.pause();
-            target.currentTime = 0;
-            currentAudioType = null;
-        } else {
-            target.currentTime = 0;
-            target.play().catch(e => console.log(e));
-            currentAudioType = type;
-        }
+            target.pause(); target.currentTime = 0; currentAudioType = null;
+        } else { target.currentTime = 0; target.play().catch(e => console.log(e)); currentAudioType = type; }
     }
-
     function updatePlayButtonUI(type, isPlaying) {
         if (type !== 'natural' && type !== 'slow') return;
-
         const btn = document.getElementById(`btn-main-${type}`);
         if (!btn) return;
-        
         const label = type === 'natural' ? 'Natural' : 'Slow';
-        
-        if (isPlaying) {
-            btn.innerHTML = `${label} ${iconPause}`; 
-        } else {
-            btn.innerHTML = `${label} ${iconPlay}`; 
-        }
+        btn.innerHTML = isPlaying ? `${label} ${iconPause}` : `${label} ${iconPlay}`; 
     }
-
-    function seekAudio(type, seconds) {
-        let target = getAudioElement(type);
-        if (target) {
-            target.currentTime += seconds;
-        }
-    }
-
-    function getAudioElement(type) {
-        if (type === 'natural') return audioNat;
-        if (type === 'slow') return audioSlow;
-        if (type === 'vocab') return audioVocab;
-        return null;
-    }
-
+    function seekAudio(type, seconds) { let target = getAudioElement(type); if (target) target.currentTime += seconds; }
+    function getAudioElement(type) { return type === 'natural' ? audioNat : type === 'slow' ? audioSlow : type === 'vocab' ? audioVocab : null; }
     function stopAudioOnly(type) {
         let target = getAudioElement(type);
-        if (target) {
-            target.pause();
-            target.currentTime = 0;
-            if(currentAudioType === type) currentAudioType = null;
-            updatePlayButtonUI(type, false);
-        }
+        if (target) { target.pause(); target.currentTime = 0; if(currentAudioType === type) currentAudioType = null; updatePlayButtonUI(type, false); }
     }
-
     function stopAllAudio() {
-        audioNat.pause(); audioNat.currentTime = 0;
-        audioSlow.pause(); audioSlow.currentTime = 0;
-        audioVocab.pause(); audioVocab.currentTime = 0;
-        currentAudioType = null;
-        
-        updatePlayButtonUI('natural', false);
-        updatePlayButtonUI('slow', false);
-        
-        clearLoop('natural');
-        clearLoop('slow');
+        audioNat.pause(); audioNat.currentTime = 0; audioSlow.pause(); audioSlow.currentTime = 0; audioVocab.pause(); audioVocab.currentTime = 0;
+        currentAudioType = null; updatePlayButtonUI('natural', false); updatePlayButtonUI('slow', false);
+        clearLoop('natural'); clearLoop('slow');
     }
-
-    function toggleAnswer(num) {
-        const box = document.getElementById('ans' + num);
-        if (box) {
-            box.style.display = (box.style.display === 'block') ? 'none' : 'block';
-        }
-    }
-
-    function clearAllAnswers() {
-        hideAnswerBoxes();
-        contentLayer.style.display = 'none';
-        contentLayer.src = '';
-        activeSlideType = null;
-    }
-
+    function toggleAnswer(num) { const box = document.getElementById('ans' + num); if (box) box.style.display = (box.style.display === 'block') ? 'none' : 'block'; }
+    function clearAllAnswers() { hideAnswerBoxes(); contentLayer.style.display = 'none'; contentLayer.src = ''; activeSlideType = null; }
     function setLoopStart(type) {
-        const audio = getAudioElement(type);
-        if(!audio) return;
-        
-        loopStates[type].start = audio.currentTime;
-        loopStates[type].end = null;
-        loopStates[type].active = false;
-        
-        document.getElementById(`btn-${type}-start`).classList.add('loop-active');
-        document.getElementById(`btn-${type}-end`).classList.remove('loop-active');
+        const audio = getAudioElement(type); if(!audio) return;
+        loopStates[type].start = audio.currentTime; loopStates[type].end = null; loopStates[type].active = false;
+        document.getElementById(`btn-${type}-start`).classList.add('loop-active'); document.getElementById(`btn-${type}-end`).classList.remove('loop-active');
     }
-
     function setLoopEnd(type) {
-        const audio = getAudioElement(type);
-        if(!audio) return;
-        if(loopStates[type].start === null) return; 
-
-        loopStates[type].end = audio.currentTime;
-        
-        if(loopStates[type].end <= loopStates[type].start) return;
-
-        loopStates[type].active = true;
-        
-        if(audio.paused) togglePlayPause(type);
-
+        const audio = getAudioElement(type); if(!audio) return; if(loopStates[type].start === null) return; 
+        loopStates[type].end = audio.currentTime; if(loopStates[type].end <= loopStates[type].start) return;
+        loopStates[type].active = true; if(audio.paused) togglePlayPause(type);
         document.getElementById(`btn-${type}-end`).classList.add('loop-active');
     }
-
     function clearLoop(type) {
         loopStates[type] = { start: null, end: null, active: false };
-        
-        document.getElementById(`btn-${type}-start`).classList.remove('loop-active');
-        document.getElementById(`btn-${type}-end`).classList.remove('loop-active');
+        document.getElementById(`btn-${type}-start`).classList.remove('loop-active'); document.getElementById(`btn-${type}-end`).classList.remove('loop-active');
     }
-
     function checkLoop(type) {
-        if (!loopStates[type].active) return;
-        const audio = getAudioElement(type);
-        if (audio.currentTime >= loopStates[type].end) {
-            audio.currentTime = loopStates[type].start;
-            if(audio.paused) audio.play();
-        }
+        if (!loopStates[type].active) return; const audio = getAudioElement(type);
+        if (audio.currentTime >= loopStates[type].end) { audio.currentTime = loopStates[type].start; if(audio.paused) audio.play(); }
     }
 </script>
 
