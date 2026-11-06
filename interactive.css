@@ -1,0 +1,107 @@
+/* CNN Interactive Reading — tablet-first, offline glossary and translations */
+#interactiveReading[hidden], #interactivePopup[hidden] { display:none !important; }
+#interactiveReading {
+    position:absolute; inset:0; z-index:8; display:flex; flex-direction:column;
+    background:linear-gradient(135deg,#fff 0%,#fdf9ff 100%);
+    color:#25212d; overflow:hidden; box-sizing:border-box;
+}
+.ir-header {
+    flex:0 0 auto; display:flex; align-items:center; justify-content:space-between; gap:12px;
+    padding:clamp(10px,2vh,20px) clamp(12px,2vw,25px);
+    border-bottom:1px solid #e5dce9; background:#fff;
+}
+.ir-title-area { min-width:0; }
+.ir-eyebrow { font-size:11px; font-weight:800; letter-spacing:.13em; color:#8e24aa; }
+.ir-title { font-size:clamp(18px,2.4vw,28px); line-height:1.15; margin:4px 0 0; font-weight:900; }
+.ir-header-actions { display:flex; align-items:center; flex-wrap:wrap; justify-content:flex-end; gap:6px; }
+.ir-action, .ir-mini-btn, .ir-icon-btn {
+    cursor:pointer; border:1px solid #bca1c9; border-radius:9px;
+    font-family:inherit; font-weight:800; background:#fff; color:#772c8a;
+    transition:background .15s, transform .15s; box-shadow:0 1px 3px #0000000d;
+}
+.ir-action:hover, .ir-mini-btn:hover, .ir-icon-btn:hover { background:#f3e5f5; }
+.ir-action:active,.ir-mini-btn:active,.ir-icon-btn:active { transform:translateY(1px); }
+.ir-action { padding:9px 12px; font-size:clamp(11px,1.2vw,14px); white-space:nowrap; }
+.ir-action-primary { background:#8e24aa; color:white; border-color:#8e24aa; }
+.ir-action-primary:hover { background:#7b1fa2; }
+.ir-rate { border:1px solid #ceb4d6; border-radius:8px; padding:7px 3px; font-size:12px; color:#6a1b9a; background:#fff; }
+.ir-guide {
+    flex:0 0 auto; margin:0; padding:7px 18px; background:#f6edfa;
+    border-bottom:1px solid #eadbed; font-size:clamp(10px,1vw,12px); color:#66566d;
+}
+.ir-sentence-list {
+    flex:1 1 auto; min-height:0; overflow-y:auto; overscroll-behavior:contain;
+    padding:clamp(10px,2vw,24px); display:flex; flex-direction:column; gap:10px;
+}
+.ir-sentence {
+    background:#fff; border-radius:13px; border:1px solid #e8deed;
+    box-shadow:0 2px 8px #4c3c6c0a; padding:clamp(10px,1.3vw,16px);
+}
+.ir-sentence-toolbar { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+.ir-number { font-weight:900; font-size:11px; color:#8e24aa; background:#f4e6f8; border-radius:6px; padding:4px 7px; }
+.ir-sentence-tools { display:flex; align-items:center; gap:8px; }
+.ir-mini-btn { padding:6px 10px; font-size:12px; }
+.ir-icon-btn { width:34px; height:31px; font-size:15px; }
+.ir-english {
+    margin:7px 0 1px; font-size:clamp(18px,1.9vw,26px); line-height:1.7;
+    font-weight:550; letter-spacing:.003em; overflow-wrap:anywhere;
+    -webkit-user-select:text; user-select:text;
+}
+.ir-word {
+    cursor:pointer; border-radius:3px; color:inherit;
+    text-decoration:underline; text-decoration-color:#a7c7ff; text-decoration-thickness:1px; text-underline-offset:4px;
+    -webkit-user-select:text; user-select:text;
+}
+.ir-word:hover, .ir-word:focus-visible { color:#1565c0; background:#eaf3ff; outline:2px solid transparent; text-decoration-thickness:2px; }
+.ir-word:focus-visible { outline:2px solid #3377bb; }
+.ir-popup {
+    position:fixed; inset:0; z-index:16000; background:#171021a3; display:flex;
+    justify-content:center; align-items:center; box-sizing:border-box; padding:12px;
+}
+.ir-popup-card {
+    width:min(640px,96vw); max-height:min(85dvh,760px); overflow:hidden;
+    display:flex; flex-direction:column;
+    background:white; border-radius:19px; box-shadow:0 18px 60px #1a092644;
+}
+.ir-popup-head { flex:0 0 auto; background:#fbf4ff; border-bottom:1px solid #ead5f0;
+    display:flex; gap:8px; justify-content:space-between; align-items:center; padding:15px 18px; }
+.ir-popup-titles { min-width:0; }
+.ir-popup-title { margin:0; font-size:clamp(20px,3vw,27px); line-height:1.3; overflow-wrap:anywhere; color:#67257c; }
+.ir-popup-subtitle { font-size:13px; color:#786980; overflow-wrap:anywhere; margin-top:3px; }
+.ir-popup-close { border:1px solid #dbc3df; background:#fff; border-radius:50%; cursor:pointer;
+    font-size:25px; color:#6a5170; width:38px; height:38px; flex:0 0 auto; }
+.ir-popup-body { flex:1 1 auto; min-height:0; overflow-y:auto; padding:16px 20px 22px; }
+.ir-popup-body p { margin:8px 0 16px; }
+.ir-meaning { font-size:clamp(18px,2.6vw,24px); line-height:1.6; font-weight:850; }
+.ir-popup-label { font-size:11px; font-weight:900; color:#8d679a; letter-spacing:.04em; margin:16px 0 5px; }
+.ir-context { font-size:clamp(14px,1.8vw,17px); font-weight:650; color:#303039; line-height:1.65; }
+.ir-japanese-text { background:#f8f2fa; border-left:3px solid #ad71c4; border-radius:7px;
+    padding:12px 13px; font-size:clamp(15px,1.7vw,18px); line-height:1.8; }
+.ir-popup-actions { display:flex; flex-wrap:wrap; gap:8px; }
+.ir-popup-notice { flex:0 0 auto; font-size:12px; color:#bd2943; padding:0 20px 12px; }
+.ir-popup-notice:empty { display:none; }
+.ir-translation-pair { border-bottom:1px solid #eadfea; padding-bottom:5px; }
+.ir-translation-pair:last-child { border:0; }
+.ir-translation-pair .ir-japanese-text { margin:5px 0 10px; }
+.ir-phrase-words { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:7px; }
+.ir-phrase-word { border:1px solid #eaddf0; background:#fffafd; padding:9px; display:flex; flex-direction:column;
+    gap:5px; border-radius:7px; overflow-wrap:anywhere; }
+.ir-phrase-word span { font-size:13px; color:#55465c; }
+@media (max-width:900px) {
+ .ir-header { flex-wrap:wrap; align-items:flex-start; gap:8px; }
+ .ir-header-actions { justify-content:flex-start; }
+ .ir-title { font-size:19px; }
+ .ir-guide { padding:6px 12px; }
+ .ir-sentence-list { padding:8px; gap:6px; }
+ .ir-english { font-size:clamp(16px,2.5vw,21px); line-height:1.52; }
+ .ir-sentence { padding:9px 11px; }
+}
+@media (max-width:550px) {
+ .ir-action { padding:7px 8px; }
+ .ir-phrase-words { grid-template-columns:1fr; }
+ .ir-popup-body { padding:12px; }
+ .ir-header { padding:8px; }
+}
+@media (prefers-reduced-motion: reduce) {
+ .ir-action, .ir-mini-btn, .ir-icon-btn { transition:none; }
+}
