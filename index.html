@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CNN 2026 Extended Course</title>
     
     <!-- 外部ライブラリとデータ・スクリプトの読み込み -->
@@ -27,10 +27,7 @@
             justify-content: center; align-items: center; text-align: center; color: #555;
         }
         #portraitWarning h2 { font-size: 24px; margin-bottom: 10px; }
-        @media screen and (orientation: portrait) {
-            #portraitWarning { display: flex; }
-            .nav-container, .app-container { display: none !important; }
-        }
+        /* iPad: keep the lesson available in portrait and landscape. */
 
         /* =========================================
            ナビゲーションバー & メインレイアウト
@@ -168,14 +165,67 @@
         }
         .gauge-text { position: absolute; bottom: 0; left: 0; width: 100%; text-align: center; font-size: 40px; font-weight: 900; color: #8e24aa; line-height: 1; }
         .feedback-msg { font-size: 24px; font-weight: bold; margin-top: 10px; }
+
+        /* Compact iPad layout: keep key actions visible without scrolling the whole page. */
+        html, body { height: 100%; }
+        body { height: 100dvh; min-height: 0; }
+        .nav-container { display: flex; overflow-x: auto; scrollbar-width: thin; align-items: stretch; height: 44px; min-height: 44px; flex-shrink: 0; }
+        .nav-btn { flex: 0 0 75px; min-width: 75px; font-size: 11px; }
+        .app-container { min-height: 0; }
+        .sidebar { overflow-y: auto; overscroll-behavior: contain; }
+        .modal-overlay { padding: 2dvh 2vw; box-sizing: border-box; }
+        .modal-content { box-sizing: border-box; width: min(96vw, 1100px); max-width: none; height: min(96dvh, 900px); padding: clamp(10px, 2vh, 18px); gap: 6px; }
+        .reading-heading { margin: 0 46px 0 0; color: #8e24aa; font-size: clamp(18px, 2.6vh, 24px); }
+        .close-btn { top: 6px; right: 10px; line-height: 1; }
+        .mode-selector { margin: 0; gap: 8px; }
+        .btn-mode { font-size: clamp(13px, 2vh, 17px); padding: 7px 0; }
+        #shadowing-options { font-size: 14px; margin: 0; }
+        .transcript-display { min-height: 60px; flex: 1 1 auto; padding: 10px 12px; font-size: clamp(16px, 2.3vw, 23px); line-height: 1.45; margin: 0; }
+        .user-speech-display { min-height: 34px; max-height: 12dvh; padding: 6px 10px; font-size: 15px; margin: 0; }
+        .mic-controls { margin: 0; }
+        .btn-mic { width: min(100%, 300px); font-size: 18px; padding: 8px 0; }
+        .result-area { margin: 0; }
+        .gauge-container { width: 115px; }
+        .gauge-text { font-size: 22px; }
+        .feedback-msg { font-size: 15px; margin: 0; }
+        .reading-status { font-size: 12px; color: #5c4861; min-height: 16px; }
+        .reading-history { padding: 2px 0; font-size: 11px; color: #555; min-height: 22px; }
+        .history-heading { font-weight: bold; }
+        .history-bars { height: 28px; display: flex; align-items: stretch; gap: 4px; margin: 3px 0; }
+        .history-bar { flex: 1; min-width: 0; display: flex; align-items: end; background: #f3e5f5; border-radius: 3px; overflow: hidden; }
+        .history-bar span { width: 100%; display: block; background: linear-gradient(180deg, #ce93d8, #8e24aa); border-radius: 3px 3px 0 0; }
+        .vocab-fallback { position: absolute; top: 17%; left: 2.5%; width: 95%; height: 80%; z-index: 3; background: #fff; box-sizing: border-box; border-radius: 7px; padding: 12px; overflow-y: auto; display: none; }
+        .vocab-fallback.active { display: block; }
+        .vocab-fallback h3 { margin: 0 0 8px; color: #8e24aa; }
+        .vocab-items { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 12px; }
+        .vocab-item { border-bottom: 1px solid #e1bee7; padding: 5px; font-size: clamp(12px, 1.5vw, 16px); }
+        .vocab-item strong { display: block; }
+        .asset-status { position: absolute; left: 3%; bottom: 4%; color: #b71c1c; background: #fff; padding: 7px; z-index: 12; display: none; font-weight: bold; }
+        .audio-status { font-size: 11px; color: #b71c1c; min-height: 0; }
+        .answer-box.answer-key { z-index: 15; display: none; background: #f3e5f5; color: #6a1b9a; font-weight: 900; font-size: clamp(18px, 3vw, 32px); border: 3px solid #8e24aa; box-shadow: 0 2px 10px #0002; align-items: center; justify-content: center; text-align: center; pointer-events: none; }
+        @media (max-height: 700px) {
+            .modal-content { gap: 3px; padding: 8px 12px; }
+            .transcript-display { font-size: 15px; line-height: 1.35; padding: 6px 10px; }
+            .user-speech-display { max-height: 10dvh; }
+            .reading-history .history-bars { height: 18px; }
+            .gauge-container { width: 86px; }
+            .reading-heading { font-size: 18px; }
+        }
+        @media (orientation: portrait) and (max-width: 900px) {
+            .app-container { flex-direction: column; }
+            .main-screen { width: 100%; min-width: 0; min-height: 28dvh; flex: 1 1 auto; }
+            #drag-handle { display: none; }
+            .sidebar { box-sizing: border-box; width: 100% !important; min-width: 0; max-width: none; max-height: 43dvh; height: auto; flex: 0 0 auto; display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 4px; padding: 4px; }
+            .sidebar-group { min-width: 0; }
+            .sidebar .btn { padding: 6px 0; font-size: 13px; }
+            .sidebar .ctrl-btn { padding: 7px 0; }
+            .sidebar .group-flexible { justify-content: initial; }
+            .vocab-items { grid-template-columns: 1fr; }
+        }
     </style>
 </head>
 <body>
 
-    <div id="portraitWarning">
-        <h2>画面を横にしてください</h2>
-        <p>Please rotate your device to landscape mode.</p>
-    </div>
 
     <!-- ナビゲーション -->
     <div class="nav-container">
@@ -207,6 +257,8 @@
         <div class="main-screen" id="mainScreen">
             <img id="bgLayer" src="" alt="Background">
             <img id="contentLayer" src="" alt="Content">
+            <div id="vocabFallback" class="vocab-fallback" aria-label="Vocabulary"></div>
+            <div id="assetStatus" class="asset-status" role="status"></div>
             <div id="ans1" class="answer-box"></div>
             <div id="ans2" class="answer-box"></div>
         </div>
@@ -276,6 +328,7 @@
                 <button class="btn btn-vocab" onclick="toggleMainAudio('vocab')">Pronunciation 🎧</button>
                 <button class="btn btn-japanese" onclick="toggleSlide('japanese')">Japanese</button>
                 
+                <div id="audioStatus" class="audio-status" role="status" aria-live="polite"></div>
                 <!-- 音読練習ボタン -->
                 <button class="btn btn-reading" onclick="openReadingMode()">Reading 🎤</button>
             </div>
@@ -298,14 +351,13 @@
     <audio id="audioSlow"></audio>
     <audio id="audioVocab"></audio>
     
-    <!-- 80%超え時の効果音 -->
-    <audio id="successSound" src="success-fanfare.mp3"></audio> 
+    <!-- Success chime is generated by Web Audio; no missing MP3 dependency. -->
 
     <!-- 音読機能モーダル (大型化・ボタン統合済) -->
     <div id="readingModal" class="modal-overlay">
         <div class="modal-content">
             <button class="close-btn" onclick="closeReadingModal()">✖</button>
-            <h2 style="margin-top:0; color:#ab47bc; font-size:32px;">Reading Practice 🎤</h2>
+            <h2 class="reading-heading">Reading Practice 🎤</h2>
             
             <div class="mode-selector">
                 <button class="btn btn-mode active" id="btn-readaloud" onclick="setReadingMode('readaloud')">Read Aloud</button>
@@ -318,6 +370,7 @@
                 <label><input type="radio" name="shadowSpeed" value="slow"> Slow Speed</label>
             </div>
 
+            <div id="readingStatus" class="reading-status" role="status" aria-live="polite"></div>
             <div class="transcript-display" id="targetText"></div>
             <div class="user-speech-display" id="userSpeechText"></div>
 
@@ -338,6 +391,7 @@
                 </div>
                 <p id="feedbackMsg" class="feedback-msg"></p>
             </div>
+            <div id="readingHistory" class="reading-history" aria-label="Reading history"></div>
         </div>
     </div>
 
@@ -411,14 +465,70 @@
         news20: [ { top:'50%', left:'10%', width:'20%', height:'5%' }, { top:'50%', left:'60%', width:'20%', height:'5%' } ]
     };
 
+    // Questions 11–20 were checked against their comprehension images and transcripts.
+    // Keep answer keys outside the choices instead of using guessed highlight coordinates.
+    const explicitAnswers = {
+        news11: ['B','A'], news12: ['A','C'], news13: ['B','C'],
+        news14: ['C','B'], news15: ['B','D'], news16: ['A','B'],
+        news17: ['B','D'], news18: ['C','D'], news19: ['C','C'],
+        news20: ['A','D']
+    };
+
     const bgLayer = document.getElementById('bgLayer');
     const contentLayer = document.getElementById('contentLayer');
+    const vocabFallback = document.getElementById('vocabFallback');
+    const assetStatus = document.getElementById('assetStatus');
+    const audioStatus = document.getElementById('audioStatus');
+    function showAudioStatus(text) { audioStatus.textContent = text; }
+    function clearVocabularyFallback() { vocabFallback.classList.remove('active'); vocabFallback.replaceChildren(); }
+    function showVocabularyFallback() {
+        const words = (typeof newsData !== 'undefined' && newsData[currentFolder] && newsData[currentFolder].vocabulary) || [];
+        vocabFallback.replaceChildren();
+        const title = document.createElement('h3');
+        title.textContent = 'Vocabulary — ' + currentFolder.toUpperCase();
+        vocabFallback.appendChild(title);
+        if (!words.length) {
+            const error = document.createElement('p');
+            error.textContent = '語彙データを読み込めませんでした。';
+            vocabFallback.appendChild(error);
+        } else {
+            const list = document.createElement('div');
+            list.className = 'vocab-items';
+            words.forEach(item => {
+                const row = document.createElement('div');
+                row.className = 'vocab-item';
+                const word = document.createElement('strong');
+                word.textContent = item.word || '';
+                const translation = document.createElement('span');
+                translation.textContent = item.japanese || '';
+                row.append(word, translation);
+                list.appendChild(row);
+            });
+            vocabFallback.appendChild(list);
+        }
+        vocabFallback.classList.add('active');
+        contentLayer.style.display = 'none';
+    }
+    contentLayer.addEventListener('error', () => {
+        if (activeSlideType === 'newwords') showVocabularyFallback();
+        else {
+            assetStatus.style.display = 'block';
+            assetStatus.textContent = '教材画像を読み込めませんでした。再読み込みしてください。';
+        }
+    });
+    [bgLayer].forEach(img => img.addEventListener('error', () => {
+        assetStatus.style.display = 'block';
+        assetStatus.textContent = '画像を読み込めません。ネット接続をご確認ください。';
+    }));
     const audioNat = document.getElementById('audioNatural');
     const audioSlow = document.getElementById('audioSlow');
     const audioVocab = document.getElementById('audioVocab');
     const navBtns = document.querySelectorAll('.nav-btn');
     const answerBoxes = [ document.getElementById('ans1'), document.getElementById('ans2') ];
 
+    [audioNat, audioSlow, audioVocab].forEach(audio => audio.addEventListener('error', () => {
+        if (audio.getAttribute('src')) showAudioStatus('音声の読み込みに失敗しました。通信状況をご確認ください。');
+    }));
     audioNat.addEventListener('timeupdate', () => checkLoop('natural'));
     audioSlow.addEventListener('timeupdate', () => checkLoop('slow'));
     audioNat.addEventListener('ended', () => updatePlayButtonUI('natural', false));
@@ -439,22 +549,51 @@
         audioSlow.src = `${folder}/${fileNames.slow}`;
         audioVocab.src = `${folder}/${fileNames.vocab}`;
         stopAllAudio(); clearAllAnswers(); applyAnswerSettings(folder);
+        showAudioStatus(''); assetStatus.style.display = 'none';
     }
     function applyAnswerSettings(folder) {
-        const settings = answerSettings[folder] || answerSettings['news1'];
-        for(let i = 0; i < 2; i++) {
-            if(settings[i]) {
-                answerBoxes[i].style.top = settings[i].top; answerBoxes[i].style.left = settings[i].left;
-                answerBoxes[i].style.width = settings[i].width; answerBoxes[i].style.height = settings[i].height;
+        const settings = answerSettings[folder] || answerSettings.news1;
+        for (let i = 0; i < 2; i++) {
+            const box = answerBoxes[i];
+            box.style.display = 'none';
+            if (explicitAnswers[folder]) {
+                box.classList.add('answer-key');
+                box.textContent = 'Q' + (i + 1) + ': ' + explicitAnswers[folder][i];
+                box.style.top = '83%';
+                box.style.left = i === 0 ? '13%' : '59%';
+                box.style.width = '26%';
+                box.style.height = '9%';
+            } else {
+                box.classList.remove('answer-key');
+                box.textContent = '';
+                if (settings[i]) {
+                    box.style.top = settings[i].top;
+                    box.style.left = settings[i].left;
+                    box.style.width = settings[i].width;
+                    box.style.height = settings[i].height;
+                }
             }
         }
     }
     function toggleSlide(type) {
-        if (activeSlideType === type) { contentLayer.style.display = 'none'; activeSlideType = null; } 
-        else {
-            if(fileNames[type]) { contentLayer.src = `${currentFolder}/${fileNames[type]}`; contentLayer.style.display = 'block'; activeSlideType = type; }
+        assetStatus.style.display = 'none';
+        if (activeSlideType === type) {
+            contentLayer.style.display = 'none';
+            clearVocabularyFallback();
+            activeSlideType = null;
+        } else {
+            clearVocabularyFallback();
+            if (fileNames[type]) {
+                activeSlideType = type;
+                if (type === 'newwords' && currentFolder === 'news8') {
+                    showVocabularyFallback();
+                } else {
+                    contentLayer.src = currentFolder + '/' + fileNames[type];
+                    contentLayer.style.display = 'block';
+                }
+            }
         }
-        if (type !== 'compre') hideAnswerBoxes();
+        if (activeSlideType !== 'compre') hideAnswerBoxes();
     }
     function hideAnswerBoxes() { answerBoxes.forEach(box => box.style.display = 'none'); }
     function togglePlayPause(type) {
@@ -465,7 +604,15 @@
             if(other) { other.pause(); updatePlayButtonUI(currentAudioType, false); }
         }
         if (target.paused) {
-            target.play().catch(e => console.log(e)); currentAudioType = type; updatePlayButtonUI(type, true);
+            target.play().then(() => {
+                currentAudioType = type;
+                updatePlayButtonUI(type, true);
+                showAudioStatus('');
+            }).catch(() => {
+                currentAudioType = null;
+                updatePlayButtonUI(type, false);
+                showAudioStatus('音声が再生できません。再度タップするか通信状況をご確認ください。');
+            });
         } else { target.pause(); updatePlayButtonUI(type, false); }
     }
     function toggleMainAudio(type) {
@@ -477,7 +624,11 @@
         }
         if (!target.paused && currentAudioType === type) {
             target.pause(); target.currentTime = 0; currentAudioType = null;
-        } else { target.currentTime = 0; target.play().catch(e => console.log(e)); currentAudioType = type; }
+        } else {
+            target.currentTime = 0;
+            target.play().then(() => { currentAudioType = type; showAudioStatus(''); })
+                .catch(() => { currentAudioType = null; showAudioStatus('音声を再生できません。もう一度お試しください。'); });
+        }
     }
     function updatePlayButtonUI(type, isPlaying) {
         if (type !== 'natural' && type !== 'slow') return;
@@ -497,8 +648,21 @@
         currentAudioType = null; updatePlayButtonUI('natural', false); updatePlayButtonUI('slow', false);
         clearLoop('natural'); clearLoop('slow');
     }
-    function toggleAnswer(num) { const box = document.getElementById('ans' + num); if (box) box.style.display = (box.style.display === 'block') ? 'none' : 'block'; }
-    function clearAllAnswers() { hideAnswerBoxes(); contentLayer.style.display = 'none'; contentLayer.src = ''; activeSlideType = null; }
+    function toggleAnswer(num) {
+        if (activeSlideType !== 'compre') toggleSlide('compre');
+        const box = document.getElementById('ans' + num);
+        if (!box) return;
+        const currentlyVisible = box.style.display !== 'none' && box.style.display !== '';
+        box.style.display = currentlyVisible ? 'none' : (box.classList.contains('answer-key') ? 'flex' : 'block');
+    }
+    function clearAllAnswers() {
+        hideAnswerBoxes();
+        clearVocabularyFallback();
+        contentLayer.style.display = 'none';
+        contentLayer.src = '';
+        assetStatus.style.display = 'none';
+        activeSlideType = null;
+    }
     function setLoopStart(type) {
         const audio = getAudioElement(type); if(!audio) return;
         loopStates[type].start = audio.currentTime; loopStates[type].end = null; loopStates[type].active = false;
