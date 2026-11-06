@@ -8,7 +8,11 @@
     <!-- 外部ライブラリとデータ・スクリプトの読み込み -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <script src="data.js"></script>
-    <script src="speech.js" defer></script> <!-- 音声認識機能を分離 -->
+    <script src="translations.js"></script>
+    <script src="glossary.js"></script>
+    <script src="speech.js" defer></script>
+    <script src="interactive.js" defer></script>
+    <link rel="stylesheet" href="interactive.css">
 
     <style>
         /* =========================================
@@ -257,6 +261,27 @@
         <div class="main-screen" id="mainScreen">
             <img id="bgLayer" src="" alt="Background">
             <img id="contentLayer" src="" alt="Content">
+            <section id="interactiveReading" aria-label="Interactive English transcript" hidden>
+                <header class="ir-header">
+                    <div class="ir-title-area">
+                        <div id="irCategory" class="ir-eyebrow">NEWS 1</div>
+                        <h2 id="irHeading" class="ir-title">Interactive Reading</h2>
+                    </div>
+                    <div class="ir-header-actions">
+                        <button id="irFullJapaneseButton" class="ir-action ir-action-primary" type="button">全文の日本語訳</button>
+                        <button id="irOriginalButton" class="ir-action" type="button">Original Image</button>
+                        <label for="irAudioRate" class="ir-eyebrow">音声</label>
+                        <select id="irAudioRate" class="ir-rate" aria-label="英文の読み上げ速度">
+                            <option value="0.75">0.75x</option>
+                            <option value="0.9" selected>0.9x</option>
+                            <option value="1">1.0x</option>
+                            <option value="1.15">1.15x</option>
+                        </select>
+                    </div>
+                </header>
+                <p class="ir-guide">青い下線の単語をタップ：意味と発音 ／ 日本語訳：1文ずつ表示 ／ 英文をなぞる：選択範囲の単語の意味</p>
+                <div id="irSentenceList" class="ir-sentence-list"></div>
+            </section>
             <div id="vocabFallback" class="vocab-fallback" aria-label="Vocabulary"></div>
             <div id="assetStatus" class="asset-status" role="status"></div>
             <div id="ans1" class="answer-box"></div>
@@ -323,10 +348,12 @@
                 <button class="btn btn-point" onclick="toggleSlide('point')">
                     Get the point <svg class="icon-svg" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
                 </button>
-                <button class="btn btn-script" onclick="toggleSlide('transcript')">Script</button>
+                <button class="btn btn-script" onclick="showInteractiveLesson(currentFolder)">Interactive Text</button>
+                <button class="btn btn-script" onclick="showOriginalTranscript()">Original Image</button>
                 <button class="btn btn-script" onclick="toggleSlide('newwords')">Vocabulary</button>
                 <button class="btn btn-vocab" onclick="toggleMainAudio('vocab')">Pronunciation 🎧</button>
-                <button class="btn btn-japanese" onclick="toggleSlide('japanese')">Japanese</button>
+                <button class="btn btn-japanese" onclick="cnnShowFullJapaneseTranslation()">Japanese 訳</button>
+                <button class="btn btn-japanese" onclick="toggleSlide('japanese')">JP Image</button>
                 
                 <div id="audioStatus" class="audio-status" role="status" aria-live="polite"></div>
                 <!-- 音読練習ボタン -->
@@ -341,7 +368,7 @@
                     <button class="btn-num" onclick="toggleAnswer(1)">1</button>
                     <button class="btn-num" onclick="toggleAnswer(2)">2</button>
                 </div>
-                <button class="btn btn-clear" onclick="clearAllAnswers()">ALL CLEAR</button>
+                <button class="btn btn-clear" onclick="clearAllAnswers(); showInteractiveLesson(currentFolder)">ALL CLEAR</button>
             </div>
         </div>
     </div>
@@ -395,6 +422,20 @@
         </div>
     </div>
 
+    <!-- Popup is outside the lesson panel to avoid clipping on iPad. -->
+    <div id="interactivePopup" class="ir-popup" role="dialog" aria-modal="true" aria-labelledby="irPopupTitle" hidden>
+        <div class="ir-popup-card">
+            <div class="ir-popup-head">
+                <div class="ir-popup-titles">
+                    <h2 id="irPopupTitle" class="ir-popup-title"></h2>
+                    <div id="irPopupSubtitle" class="ir-popup-subtitle"></div>
+                </div>
+                <button id="irPopupClose" class="ir-popup-close" type="button" aria-label="閉じる">×</button>
+            </div>
+            <div id="irPopupBody" class="ir-popup-body"></div>
+            <div id="irPopupNotice" class="ir-popup-notice" role="status" aria-live="polite"></div>
+        </div>
+    </div>
 <script>
 
     // =========================================
@@ -550,6 +591,7 @@
         audioVocab.src = `${folder}/${fileNames.vocab}`;
         stopAllAudio(); clearAllAnswers(); applyAnswerSettings(folder);
         showAudioStatus(''); assetStatus.style.display = 'none';
+        if (typeof showInteractiveLesson === 'function') showInteractiveLesson(folder);
     }
     function applyAnswerSettings(folder) {
         const settings = answerSettings[folder] || answerSettings.news1;
@@ -576,6 +618,7 @@
         }
     }
     function toggleSlide(type) {
+        if (typeof hideInteractiveReading === 'function') hideInteractiveReading();
         assetStatus.style.display = 'none';
         if (activeSlideType === type) {
             contentLayer.style.display = 'none';
