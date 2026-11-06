@@ -10,10 +10,6 @@
     <script src="data.js"></script>
     <script src="speech.js" defer></script> <!-- 音声認識機能を分離 -->
 
-    <!-- Firebase SDK の読み込み (compat版) -->
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-
     <style>
         /* =========================================
            基本設定
@@ -35,33 +31,6 @@
             #portraitWarning { display: flex; }
             .nav-container, .app-container { display: none !important; }
         }
-
-        /* =========================================
-           ライセンスロック画面 CSS
-        ========================================= */
-        #authOverlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(135deg, #fcf9fd, #e1bee7);
-            z-index: 30000; display: flex; flex-direction: column;
-            justify-content: center; align-items: center; text-align: center;
-        }
-        .auth-box {
-            background: white; padding: 40px; border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2); max-width: 400px; width: 90%;
-        }
-        .auth-box h2 { color: #8e24aa; margin-top: 0; }
-        .auth-box input {
-            width: 100%; padding: 12px; font-size: 18px; margin: 15px 0;
-            border: 2px solid #ce93d8; border-radius: 6px; box-sizing: border-box;
-            text-align: center; font-weight: bold;
-        }
-        .auth-box button {
-            background: linear-gradient(135deg, #ab47bc, #8e24aa); color: white;
-            border: none; padding: 12px 0; width: 100%; font-size: 18px;
-            font-weight: bold; border-radius: 6px; cursor: pointer; transition: 0.2s;
-        }
-        .auth-box button:hover { opacity: 0.9; }
-        #authError { color: #e91e63; font-weight: bold; margin-top: 10px; display: none; }
 
         /* =========================================
            ナビゲーションバー & メインレイアウト
@@ -206,17 +175,6 @@
     <div id="portraitWarning">
         <h2>画面を横にしてください</h2>
         <p>Please rotate your device to landscape mode.</p>
-    </div>
-
-    <!-- ライセンスキー入力画面 -->
-    <div id="authOverlay">
-        <div class="auth-box">
-            <h2>CNN Extended Course</h2>
-            <p>ライセンスキーを入力してください</p>
-            <input type="text" id="licenseInput" placeholder="例: class001">
-            <button onclick="checkLicense()">学習をスタート</button>
-            <p id="authError">キーが正しくないか、使用済みです。</p>
-        </div>
     </div>
 
     <!-- ナビゲーション -->
@@ -384,88 +342,6 @@
     </div>
 
 <script>
-    // =========================================
-    // Firebase ライセンス認証システム
-    // =========================================
-    const firebaseConfig = {
-        apiKey: "AIzaSyBFE6MrD3DlVmHytTXcSQGVyj99gQHypAA",
-        authDomain: "cnn-extended-auth.firebaseapp.com",
-        projectId: "cnn-extended-auth",
-        storageBucket: "cnn-extended-auth.firebasestorage.app",
-        messagingSenderId: "425268054691",
-        appId: "1:425268054691:web:43ab37a98406df91d74d16"
-    };
-
-    // Firebaseの初期化
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
-
-    // 画面読み込み時にチェック
-    window.addEventListener('DOMContentLoaded', async () => {
-        const savedKey = localStorage.getItem('cnnLicenseKey');
-        const savedDeviceId = localStorage.getItem('cnnDeviceId');
-
-        if (savedKey && savedDeviceId) {
-            // すでにログイン済みの場合は、裏側でキーを再確認
-            const docRef = db.collection("licenses").doc(savedKey);
-            const docSnap = await docRef.get();
-            if (docSnap.exists && docSnap.data().deviceId === savedDeviceId) {
-                // 認証成功：ロック画面を消す
-                document.getElementById('authOverlay').style.display = 'none';
-            } else {
-                // 端末が違う、またはキーが削除された場合
-                localStorage.removeItem('cnnLicenseKey');
-            }
-        }
-    });
-
-    // 「学習をスタート」ボタンを押したときの処理
-    async function checkLicense() {
-        const inputKey = document.getElementById('licenseInput').value.trim();
-        const errorMsg = document.getElementById('authError');
-        if (!inputKey) return;
-
-        try {
-            const docRef = db.collection("licenses").doc(inputKey);
-            const docSnap = await docRef.get();
-
-            if (docSnap.exists) {
-                const data = docSnap.data();
-                
-                // 初回入力（まだどの端末にも紐づいていない）の場合
-                if (!data.deviceId || data.deviceId === "") {
-                    // ランダムな端末IDを作成して保存
-                    const newDeviceId = "device_" + Math.random().toString(36).substr(2, 9);
-                    await docRef.update({ deviceId: newDeviceId });
-                    
-                    localStorage.setItem('cnnLicenseKey', inputKey);
-                    localStorage.setItem('cnnDeviceId', newDeviceId);
-                    
-                    document.getElementById('authOverlay').style.display = 'none';
-                } 
-                // すでに誰かが使っている場合
-                else {
-                    const myDeviceId = localStorage.getItem('cnnDeviceId');
-                    // 自分の端末なら通す
-                    if (data.deviceId === myDeviceId) {
-                        localStorage.setItem('cnnLicenseKey', inputKey);
-                        document.getElementById('authOverlay').style.display = 'none';
-                    } else {
-                        // 別の端末で使われている
-                        errorMsg.innerText = "このキーは別の端末ですでに使用されています。";
-                        errorMsg.style.display = "block";
-                    }
-                }
-            } else {
-                errorMsg.innerText = "無効なライセンスキーです。";
-                errorMsg.style.display = "block";
-            }
-        } catch (error) {
-            console.error("エラー:", error);
-            errorMsg.innerText = "通信エラーが発生しました。インターネット接続を確認してください。";
-            errorMsg.style.display = "block";
-        }
-    }
 
     // =========================================
     // UI処理とメインロジック
