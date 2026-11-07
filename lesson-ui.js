@@ -148,8 +148,30 @@ function renderVocabularyPractice() {
   switcher.append(b);
  });root.append(switcher);
  const item=cnnLearning.words[idx],cloze=cnnLearning.mode==='cloze';
- root.append(cnnMake('p','vq-instruction',cloze?'空欄に入る英語を選んでください。':'単語の意味を選んでください。'));
- root.append(cnnMake('p','vq-prompt',cloze?item.question:item.word||item.answer));
+ root.append(cnnMake('p','vq-instruction',cloze
+   ? '次の英文の空欄（？）に入る最も適切な英語を、4つの選択肢から選んでください。'
+   : '次の英語の意味として最も適切な日本語を、4つの選択肢から選んでください。'));
+ if(cloze) {
+  const focus=cnnMake('div','vq-focus');
+  focus.append(cnnMake('div','vq-focus-label','英文の空所補充'));
+  const phrase=cnnClozeFocus(item.question);
+  const line=cnnMake('div','vq-cloze');
+  if(phrase.prefix)line.append(cnnMake('span','vq-context',phrase.prefix));
+  line.append(cnnMake('span','vq-blank','？'));
+  if(phrase.suffix)line.append(cnnMake('span','vq-context',phrase.suffix));
+  focus.append(line);
+  if(item.japanese)focus.append(cnnMake('div','vq-word-hint','意味のヒント：'+item.japanese));
+  const detail=cnnMake('details','vq-full-sentence');
+  detail.append(cnnMake('summary','','英文全体を確認'));
+  detail.append(cnnMake('p','',item.question.replace(/\[\s*\]/g,'［　？　］')));
+  focus.append(detail);
+  root.append(focus);
+ } else {
+  const focus=cnnMake('div','vq-focus vq-meaning-focus');
+  focus.append(cnnMake('div','vq-focus-label','英語の意味を選ぼう'));
+  focus.append(cnnMake('div','vq-word-prompt',item.word||item.answer));
+  root.append(focus);
+ }
  const choices=cnnMake('div','vq-choices');
  cnnLearning.choices.forEach((value,i)=>{
   const b=cnnButton('',()=>cnnChooseVocabulary(i),'vq-choice');
@@ -169,6 +191,34 @@ function renderVocabularyPractice() {
     cnnButton(idx+1===n?'結果を見る':'次の問題 →',cnnNextVocabulary,'study-action study-action-primary'));
   feedback.append(row);root.append(feedback);
  }
+}
+function cnnClozeFocus(sentence) {
+ const text=String(sentence||'');
+ const m=/\[\s*\]/.exec(text);
+ if(!m)return {prefix:text,suffix:''};
+ const left=text.slice(0,m.index).trim().split(/\s+/).filter(Boolean);
+ const right=text.slice(m.index+m[0].length).trim().split(/\s+/).filter(Boolean);
+ const count=7;
+ const prefix=(left.length>count?'… ':'')+left.slice(-count).join(' ');
+ const suffix=right.slice(0,count).join(' ')+(right.length>count?' …':'');
+ return {prefix,suffix};
+}
+function cnnOpenMaterials() {
+ const dialog=cnnNode('materialsDialog');
+ if(!dialog)return;
+ if(typeof dialog.showModal==='function'){if(!dialog.open)dialog.showModal();}
+ else dialog.setAttribute('open','');
+}
+function cnnCloseMaterials() {
+ const dialog=cnnNode('materialsDialog');
+ if(!dialog)return;
+ if(typeof dialog.close==='function'&&dialog.open)dialog.close();
+ else dialog.removeAttribute('open');
+}
+function cnnMaterialsAction(mode) {
+ cnnCloseMaterials();
+ if(mode==='text'&&typeof showInteractiveLesson==='function')showInteractiveLesson(currentFolder);
+ else if(typeof toggleSlide==='function')toggleSlide(mode);
 }
 function cnnTransportSeek(seconds) {
  const audio=typeof getAudioElement==='function'?getAudioElement(currentAudioType==='slow'?'slow':'natural'):null;
