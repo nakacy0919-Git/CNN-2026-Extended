@@ -204,7 +204,6 @@
         .vocab-items { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 12px; }
         .vocab-item { border-bottom: 1px solid #e1bee7; padding: 5px; font-size: clamp(12px, 1.5vw, 16px); }
         .vocab-item strong { display: block; }
-        .asset-status { position: absolute; left: 3%; bottom: 4%; color: #b71c1c; background: #fff; padding: 7px; z-index: 12; display: none; font-weight: bold; }
         .audio-status { font-size: 11px; color: #b71c1c; min-height: 0; }
         .answer-box.answer-key { z-index: 15; display: none; background: #f3e5f5; color: #6a1b9a; font-weight: 900; font-size: clamp(18px, 3vw, 32px); border: 3px solid #8e24aa; box-shadow: 0 2px 10px #0002; align-items: center; justify-content: center; text-align: center; pointer-events: none; }
         @media (max-height: 700px) {
@@ -283,7 +282,6 @@
                 <div id="irSentenceList" class="ir-sentence-list"></div>
             </section>
             <div id="vocabFallback" class="vocab-fallback" aria-label="Vocabulary"></div>
-            <div id="assetStatus" class="asset-status" role="status"></div>
             <div id="ans1" class="answer-box"></div>
             <div id="ans2" class="answer-box"></div>
         </div>
@@ -518,7 +516,6 @@
     const bgLayer = document.getElementById('bgLayer');
     const contentLayer = document.getElementById('contentLayer');
     const vocabFallback = document.getElementById('vocabFallback');
-    const assetStatus = document.getElementById('assetStatus');
     const audioStatus = document.getElementById('audioStatus');
     function showAudioStatus(text) { audioStatus.textContent = text; }
     function clearVocabularyFallback() { vocabFallback.classList.remove('active'); vocabFallback.replaceChildren(); }
@@ -550,17 +547,11 @@
         vocabFallback.classList.add('active');
         contentLayer.style.display = 'none';
     }
+    // Keep the existing vocabulary fallback without presenting a page-level warning.
     contentLayer.addEventListener('error', () => {
         if (activeSlideType === 'newwords') showVocabularyFallback();
-        else {
-            assetStatus.style.display = 'block';
-            assetStatus.textContent = '教材画像を読み込めませんでした。再読み込みしてください。';
-        }
+        else contentLayer.style.display = 'none';
     });
-    [bgLayer].forEach(img => img.addEventListener('error', () => {
-        assetStatus.style.display = 'block';
-        assetStatus.textContent = '画像を読み込めません。ネット接続をご確認ください。';
-    }));
     const audioNat = document.getElementById('audioNatural');
     const audioSlow = document.getElementById('audioSlow');
     const audioVocab = document.getElementById('audioVocab');
@@ -585,12 +576,12 @@
     }
     function loadLesson(folder) {
         bgLayer.src = `${folder}/${fileNames.main}`;
-        contentLayer.style.display = 'none'; contentLayer.src = ''; activeSlideType = null;
+        contentLayer.style.display = 'none'; contentLayer.removeAttribute('src'); activeSlideType = null;
         audioNat.src = `${folder}/${fileNames.natural}`;
         audioSlow.src = `${folder}/${fileNames.slow}`;
         audioVocab.src = `${folder}/${fileNames.vocab}`;
         stopAllAudio(); clearAllAnswers(); applyAnswerSettings(folder);
-        showAudioStatus(''); assetStatus.style.display = 'none';
+        showAudioStatus('');
         if (typeof showInteractiveLesson === 'function') showInteractiveLesson(folder);
     }
     function applyAnswerSettings(folder) {
@@ -619,7 +610,6 @@
     }
     function toggleSlide(type) {
         if (typeof hideInteractiveReading === 'function') hideInteractiveReading();
-        assetStatus.style.display = 'none';
         if (activeSlideType === type) {
             contentLayer.style.display = 'none';
             clearVocabularyFallback();
@@ -702,8 +692,7 @@
         hideAnswerBoxes();
         clearVocabularyFallback();
         contentLayer.style.display = 'none';
-        contentLayer.src = '';
-        assetStatus.style.display = 'none';
+        contentLayer.removeAttribute('src');
         activeSlideType = null;
     }
     function setLoopStart(type) {
