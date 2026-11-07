@@ -12,6 +12,8 @@
     <script src="glossary.js"></script>
     <script src="speech.js" defer></script>
     <script src="interactive.js" defer></script>
+    <script src="comprehension-data.js" defer></script>
+    <script src="lesson-ui.js" defer></script>
     <link rel="stylesheet" href="interactive.css">
 
     <style>
@@ -226,6 +228,7 @@
             .vocab-items { grid-template-columns: 1fr; }
         }
     </style>
+    <link rel="stylesheet" href="compact-ui.css">
 </head>
 <body>
 
@@ -267,8 +270,6 @@
                         <h2 id="irHeading" class="ir-title">Interactive Reading</h2>
                     </div>
                     <div class="ir-header-actions">
-                        <button id="irFullJapaneseButton" class="ir-action ir-action-primary" type="button">全文の日本語訳</button>
-                        <button id="irOriginalButton" class="ir-action" type="button">Original Image</button>
                         <label for="irAudioRate" class="ir-eyebrow">音声</label>
                         <select id="irAudioRate" class="ir-rate" aria-label="英文の読み上げ速度">
                             <option value="0.75">0.75x</option>
@@ -281,93 +282,86 @@
                 <p class="ir-guide">青い下線の単語をタップ：意味と発音 ／ 日本語訳：1文ずつ表示 ／ 英文をなぞる：選択範囲の単語の意味</p>
                 <div id="irSentenceList" class="ir-sentence-list"></div>
             </section>
+            <section id="digitalComprehension" class="learning-panel" aria-label="Digital comprehension" hidden>
+                <header class="study-header">
+                    <div class="study-headings"><div class="study-eyebrow">COMPREHENSION · TWO QUESTIONS</div>
+                        <h2 id="cqTitle">Check your comprehension</h2></div>
+                    <button type="button" class="study-action" onclick="cnnReturnToText()">← Reading</button>
+                </header>
+                <div id="cqQuestions" class="cq-grid"></div>
+            </section>
+            <section id="vocabularyPractice" class="learning-panel" aria-label="Vocabulary practice" hidden>
+                <header class="study-header">
+                    <div class="study-headings"><div class="study-eyebrow">VOCABULARY TRAINING · MULTIPLE CHOICE</div>
+                        <h2 id="vqTitle">Vocabulary Practice</h2></div>
+                    <button type="button" class="study-action" onclick="cnnReturnToText()">← Reading</button>
+                </header>
+                <div id="vqContent" class="vq-container"></div>
+            </section>
             <div id="vocabFallback" class="vocab-fallback" aria-label="Vocabulary"></div>
-            <div id="ans1" class="answer-box"></div>
-            <div id="ans2" class="answer-box"></div>
         </div>
 
         <!-- リサイズハンドル -->
         <div id="drag-handle"></div>
 
         <!-- サイドバー -->
-        <div class="sidebar" id="sidebar">
-            <div class="sidebar-group">
-                <div class="audio-wrapper">
-                    <button class="btn btn-audio-nat" id="btn-main-natural" onclick="togglePlayPause('natural')">
+        <div class="sidebar" id="sidebar" aria-label="Lesson controls">
+            <div class="compact-view-tabs" role="group" aria-label="Reading display">
+                <button type="button" data-cnn-mode="text" aria-pressed="true" onclick="showInteractiveLesson(currentFolder)">Interactive Text</button>
+                <button type="button" data-cnn-mode="original" aria-pressed="false" onclick="showOriginalTranscript()">Original Image</button>
+            </div>
+            <div class="compact-study-actions" role="group" aria-label="Learning activities">
+                <button type="button" data-cnn-mode="comprehension" aria-pressed="false" onclick="showDigitalComprehension()">Comprehension</button>
+                <button type="button" data-cnn-mode="vocabulary" aria-pressed="false" onclick="showVocabularyPractice()">Vocabulary Quiz</button>
+                <button class="study-reading" type="button" onclick="openReadingMode()">Reading 🎤</button>
+                <button type="button" onclick="cnnShowFullJapaneseTranslation()">日本語訳</button>
+                <button type="button" onclick="toggleSlide('point')">Get the point</button>
+                <button type="button" onclick="toggleMainAudio('vocab')">Pronunciation ♫</button>
+            </div>
+            <div id="quizRevealControls" class="quiz-reveal-buttons" hidden role="group" aria-label="Correct answers">
+                <button id="quizAnswer1" type="button" aria-pressed="false" onclick="revealComprehensionAnswer(1)">答え 1</button>
+                <button id="quizAnswer2" type="button" aria-pressed="false" onclick="revealComprehensionAnswer(2)">答え 2</button>
+            </div>
+            <div class="compact-audio" aria-label="Audio playback">
+                <div class="compact-audio-main">
+                    <button id="btn-main-natural" type="button" onclick="togglePlayPause('natural')">
                         Natural <svg class="icon-svg" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
                     </button>
-                    <div class="audio-controls">
-                        <button class="ctrl-btn" onclick="seekAudio('natural', -5)">
-                            <svg class="icon-svg" viewBox="0 0 24 24"><path d="M11 18V6l-8.5 6 8.5 6zm.5-6l8.5 6V6l-8.5 6z"/></svg> 5s
-                        </button>
-                        <button class="ctrl-btn stop-btn" onclick="stopAudioOnly('natural')">
-                            <svg class="icon-svg" viewBox="0 0 24 24"><path d="M6 6h12v12H6z"/></svg>
-                        </button>
-                        <button class="ctrl-btn" onclick="seekAudio('natural', 5)">
-                            <svg class="icon-svg" viewBox="0 0 24 24"><path d="M4 18l8.5-6L4 6v12zm9-12v12l8.5-6L13 6z"/></svg> 5s
-                        </button>
-                    </div>
-                    <div class="loop-controls">
-                        <button id="btn-natural-start" class="loop-btn" onclick="setLoopStart('natural')">Start</button>
-                        <button id="btn-natural-end" class="loop-btn" onclick="setLoopEnd('natural')">End</button>
-                        <button class="loop-btn" onclick="clearLoop('natural')">Clear</button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="sidebar-group">
-                <div class="audio-wrapper">
-                    <button class="btn btn-audio-slow" id="btn-main-slow" onclick="togglePlayPause('slow')">
+                    <button id="btn-main-slow" type="button" onclick="togglePlayPause('slow')">
                         Slow <svg class="icon-svg" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
                     </button>
-                    <div class="audio-controls">
-                        <button class="ctrl-btn" onclick="seekAudio('slow', -5)">
-                            <svg class="icon-svg" viewBox="0 0 24 24"><path d="M11 18V6l-8.5 6 8.5 6zm.5-6l8.5 6V6l-8.5 6z"/></svg> 5s
-                        </button>
-                        <button class="ctrl-btn stop-btn" onclick="stopAudioOnly('slow')">
-                            <svg class="icon-svg" viewBox="0 0 24 24"><path d="M6 6h12v12H6z"/></svg>
-                        </button>
-                        <button class="ctrl-btn" onclick="seekAudio('slow', 5)">
-                            <svg class="icon-svg" viewBox="0 0 24 24"><path d="M4 18l8.5-6L4 6v12zm9-12v12l8.5-6L13 6z"/></svg> 5s
-                        </button>
-                    </div>
-                    <div class="loop-controls">
-                        <button id="btn-slow-start" class="loop-btn" onclick="setLoopStart('slow')">Start</button>
-                        <button id="btn-slow-end" class="loop-btn" onclick="setLoopEnd('slow')">End</button>
-                        <button class="loop-btn" onclick="clearLoop('slow')">Clear</button>
-                    </div>
+                </div>
+                <div class="compact-transport">
+                    <button type="button" onclick="cnnTransportSeek(-5)" aria-label="Back five seconds">−5s</button>
+                    <button type="button" onclick="cnnTransportStop()" aria-label="Stop audio">■ Stop</button>
+                    <button type="button" onclick="cnnTransportSeek(5)" aria-label="Skip five seconds">+5s</button>
                 </div>
             </div>
-
-            <hr>
-
-            <!-- レイヤー切り替え & 音読ボタン -->
-            <div class="sidebar-group group-flexible">
-                <button class="btn btn-point" onclick="toggleSlide('point')">
-                    Get the point <svg class="icon-svg" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
-                </button>
-                <button class="btn btn-script" onclick="showInteractiveLesson(currentFolder)">Interactive Text</button>
-                <button class="btn btn-script" onclick="showOriginalTranscript()">Original Image</button>
-                <button class="btn btn-script" onclick="toggleSlide('newwords')">Vocabulary</button>
-                <button class="btn btn-vocab" onclick="toggleMainAudio('vocab')">Pronunciation 🎧</button>
-                <button class="btn btn-japanese" onclick="cnnShowFullJapaneseTranslation()">Japanese 訳</button>
-                <button class="btn btn-japanese" onclick="toggleSlide('japanese')">JP Image</button>
-                
-                <div id="audioStatus" class="audio-status" role="status" aria-live="polite"></div>
-                <!-- 音読練習ボタン -->
-                <button class="btn btn-reading" onclick="openReadingMode()">Reading 🎤</button>
-            </div>
-
-            <hr>
-
-            <div class="sidebar-group">
-                <button class="btn btn-compre" onclick="toggleSlide('compre')">Comprehension</button>
-                <div class="quiz-controls">
-                    <button class="btn-num" onclick="toggleAnswer(1)">1</button>
-                    <button class="btn-num" onclick="toggleAnswer(2)">2</button>
+            <details class="compact-more" id="moreMaterials">
+                <summary>その他の教材・ループ設定 ▾</summary>
+                <div class="compact-more-content">
+                    <div class="compact-extra-label">教材画像（必要なときだけ表示）</div>
+                    <div class="compact-extra-row">
+                        <button type="button" onclick="toggleSlide('newwords')">Vocabulary List</button>
+                        <button type="button" onclick="toggleSlide('japanese')">JP Image</button>
+                        <button type="button" onclick="toggleSlide('compre-image')">Quiz Image</button>
+                        <button type="button" onclick="cnnReturnToText()">Textに戻る</button>
+                    </div>
+                    <div class="compact-extra-label">Natural Loop</div>
+                    <div class="compact-extra-row">
+                        <button id="btn-natural-start" type="button" onclick="setLoopStart('natural')">Start</button>
+                        <button id="btn-natural-end" type="button" onclick="setLoopEnd('natural')">End</button>
+                        <button type="button" onclick="clearLoop('natural')">Clear</button>
+                    </div>
+                    <div class="compact-extra-label">Slow Loop</div>
+                    <div class="compact-extra-row">
+                        <button id="btn-slow-start" type="button" onclick="setLoopStart('slow')">Start</button>
+                        <button id="btn-slow-end" type="button" onclick="setLoopEnd('slow')">End</button>
+                        <button type="button" onclick="clearLoop('slow')">Clear</button>
+                    </div>
                 </div>
-                <button class="btn btn-clear" onclick="clearAllAnswers(); showInteractiveLesson(currentFolder)">ALL CLEAR</button>
-            </div>
+            </details>
+            <div id="audioStatus" class="audio-status" role="status" aria-live="polite"></div>
         </div>
     </div>
 
@@ -481,38 +475,6 @@
         natural: 'natural.mp3', slow: 'slow.mp3', vocab: 'vocab.mp3'
     };
 
-    const answerSettings = {
-        news1:  [ { top:'34%', left:'10%', width:'15%', height:'5%' }, { top:'48%', left:'53%', width:'35%', height:'5%' } ],
-        news2:  [ { top:'61%', left:'8%', width:'35%', height:'5%' }, { top:'36%', left:'53%', width:'35%', height:'5%' } ],
-        news3:  [ { top:'48%', left:'9%', width:'17%', height:'4%' }, { top:'44%', left:'53%', width:'35%', height:'8%' } ],
-        news4:  [ { top:'56%', left:'7%', width:'23%', height:'4%' }, { top:'37%', left:'52%', width:'25%', height:'4%' } ],
-        news5:  [ { top:'48%', left:'7%', width:'10%', height:'4%' }, { top:'53%', left:'47%', width:'48%', height:'10%' } ],
-        news6:  [ { top:'40%', left:'7%', width:'20%', height:'5%' }, { top:'59%', left:'40%', width:'50%', height:'9%' } ],
-        news7:  [ { top:'59%', left:'7%', width:'40%', height:'4%' }, { top:'35%', left:'53%', width:'40%', height:'5%' } ],
-        news8:  [ { top:'54%', left:'7%', width:'15%', height:'4%' }, { top:'49%', left:'54%', width:'23%', height:'4%' } ],
-        news9:  [ { top:'43%', left:'7%', width:'30%', height:'4%' }, { top:'38%', left:'53%', width:'30%', height:'4%' } ],
-        news10: [ { top:'49%', left:'7%', width:'35%', height:'5%' }, { top:'44%', left:'52%', width:'25%', height:'4.5%' } ],
-        news11: [ { top:'50%', left:'10%', width:'20%', height:'5%' }, { top:'50%', left:'60%', width:'20%', height:'5%' } ],
-        news12: [ { top:'50%', left:'10%', width:'20%', height:'5%' }, { top:'50%', left:'60%', width:'20%', height:'5%' } ],
-        news13: [ { top:'50%', left:'10%', width:'20%', height:'5%' }, { top:'50%', left:'60%', width:'20%', height:'5%' } ],
-        news14: [ { top:'50%', left:'10%', width:'20%', height:'5%' }, { top:'50%', left:'60%', width:'20%', height:'5%' } ],
-        news15: [ { top:'50%', left:'10%', width:'20%', height:'5%' }, { top:'50%', left:'60%', width:'20%', height:'5%' } ],
-        news16: [ { top:'50%', left:'10%', width:'20%', height:'5%' }, { top:'50%', left:'60%', width:'20%', height:'5%' } ],
-        news17: [ { top:'50%', left:'10%', width:'20%', height:'5%' }, { top:'50%', left:'60%', width:'20%', height:'5%' } ],
-        news18: [ { top:'50%', left:'10%', width:'20%', height:'5%' }, { top:'50%', left:'60%', width:'20%', height:'5%' } ],
-        news19: [ { top:'50%', left:'10%', width:'20%', height:'5%' }, { top:'50%', left:'60%', width:'20%', height:'5%' } ],
-        news20: [ { top:'50%', left:'10%', width:'20%', height:'5%' }, { top:'50%', left:'60%', width:'20%', height:'5%' } ]
-    };
-
-    // Questions 11–20 were checked against their comprehension images and transcripts.
-    // Keep answer keys outside the choices instead of using guessed highlight coordinates.
-    const explicitAnswers = {
-        news11: ['B','A'], news12: ['A','C'], news13: ['B','C'],
-        news14: ['C','B'], news15: ['B','D'], news16: ['A','B'],
-        news17: ['B','D'], news18: ['C','D'], news19: ['C','C'],
-        news20: ['A','D']
-    };
-
     const bgLayer = document.getElementById('bgLayer');
     const contentLayer = document.getElementById('contentLayer');
     const vocabFallback = document.getElementById('vocabFallback');
@@ -556,7 +518,7 @@
     const audioSlow = document.getElementById('audioSlow');
     const audioVocab = document.getElementById('audioVocab');
     const navBtns = document.querySelectorAll('.nav-btn');
-    const answerBoxes = [ document.getElementById('ans1'), document.getElementById('ans2') ];
+    const answerBoxes = []; // Correct answers now highlight digital options.
 
     [audioNat, audioSlow, audioVocab].forEach(audio => audio.addEventListener('error', () => {
         if (audio.getAttribute('src')) showAudioStatus('音声の読み込みに失敗しました。通信状況をご確認ください。');
@@ -580,35 +542,13 @@
         audioNat.src = `${folder}/${fileNames.natural}`;
         audioSlow.src = `${folder}/${fileNames.slow}`;
         audioVocab.src = `${folder}/${fileNames.vocab}`;
-        stopAllAudio(); clearAllAnswers(); applyAnswerSettings(folder);
+        stopAllAudio(); clearAllAnswers();
         showAudioStatus('');
         if (typeof showInteractiveLesson === 'function') showInteractiveLesson(folder);
     }
-    function applyAnswerSettings(folder) {
-        const settings = answerSettings[folder] || answerSettings.news1;
-        for (let i = 0; i < 2; i++) {
-            const box = answerBoxes[i];
-            box.style.display = 'none';
-            if (explicitAnswers[folder]) {
-                box.classList.add('answer-key');
-                box.textContent = 'Q' + (i + 1) + ': ' + explicitAnswers[folder][i];
-                box.style.top = '83%';
-                box.style.left = i === 0 ? '13%' : '59%';
-                box.style.width = '26%';
-                box.style.height = '9%';
-            } else {
-                box.classList.remove('answer-key');
-                box.textContent = '';
-                if (settings[i]) {
-                    box.style.top = settings[i].top;
-                    box.style.left = settings[i].left;
-                    box.style.width = settings[i].width;
-                    box.style.height = settings[i].height;
-                }
-            }
-        }
-    }
     function toggleSlide(type) {
+        if (type === 'compre') return showDigitalComprehension();
+        if (typeof hideDigitalLearning === 'function') hideDigitalLearning();
         if (typeof hideInteractiveReading === 'function') hideInteractiveReading();
         if (activeSlideType === type) {
             contentLayer.style.display = 'none';
@@ -616,17 +556,19 @@
             activeSlideType = null;
         } else {
             clearVocabularyFallback();
-            if (fileNames[type]) {
+            const targetFile = type === 'compre-image' ? fileNames.compre : fileNames[type];
+            if (targetFile) {
                 activeSlideType = type;
                 if (type === 'newwords' && currentFolder === 'news8') {
                     showVocabularyFallback();
                 } else {
-                    contentLayer.src = currentFolder + '/' + fileNames[type];
+                    contentLayer.src = currentFolder + '/' + targetFile;
                     contentLayer.style.display = 'block';
                 }
             }
         }
-        if (activeSlideType !== 'compre') hideAnswerBoxes();
+        if (typeof cnnSetMode === 'function') cnnSetMode(type === 'transcript' ? 'original' : '');
+        hideAnswerBoxes();
     }
     function hideAnswerBoxes() { answerBoxes.forEach(box => box.style.display = 'none'); }
     function togglePlayPause(type) {
@@ -682,11 +624,7 @@
         clearLoop('natural'); clearLoop('slow');
     }
     function toggleAnswer(num) {
-        if (activeSlideType !== 'compre') toggleSlide('compre');
-        const box = document.getElementById('ans' + num);
-        if (!box) return;
-        const currentlyVisible = box.style.display !== 'none' && box.style.display !== '';
-        box.style.display = currentlyVisible ? 'none' : (box.classList.contains('answer-key') ? 'flex' : 'block');
+        revealComprehensionAnswer(num);
     }
     function clearAllAnswers() {
         hideAnswerBoxes();
