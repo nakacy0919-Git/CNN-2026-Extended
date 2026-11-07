@@ -203,23 +203,6 @@ function cnnClozeFocus(sentence) {
  const suffix=right.slice(0,count).join(' ')+(right.length>count?' …':'');
  return {prefix,suffix};
 }
-function cnnOpenMaterials() {
- const dialog=cnnNode('materialsDialog');
- if(!dialog)return;
- if(typeof dialog.showModal==='function'){if(!dialog.open)dialog.showModal();}
- else dialog.setAttribute('open','');
-}
-function cnnCloseMaterials() {
- const dialog=cnnNode('materialsDialog');
- if(!dialog)return;
- if(typeof dialog.close==='function'&&dialog.open)dialog.close();
- else dialog.removeAttribute('open');
-}
-function cnnMaterialsAction(mode) {
- cnnCloseMaterials();
- if(mode==='text'&&typeof showInteractiveLesson==='function')showInteractiveLesson(currentFolder);
- else if(typeof toggleSlide==='function')toggleSlide(mode);
-}
 function cnnTransportSeek(seconds) {
  const audio=typeof getAudioElement==='function'?getAudioElement(currentAudioType==='slow'?'slow':'natural'):null;
  if(audio&&Number.isFinite(audio.duration)&&audio.duration>0)
