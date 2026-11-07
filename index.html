@@ -13,7 +13,7 @@
     <script src="speech.js" defer></script>
     <script src="interactive.js" defer></script>
     <script src="comprehension-data.js" defer></script>
-    <script src="lesson-ui.js" defer></script>
+    <script src="lesson-ui.js?v=redesign-20261107-b" defer></script>
     <link rel="stylesheet" href="interactive.css">
 
     <style>
@@ -221,7 +221,7 @@
             .vocab-items { grid-template-columns: 1fr; }
         }
     </style>
-    <link rel="stylesheet" href="compact-ui.css">
+    <link rel="stylesheet" href="compact-ui.css?v=redesign-20261107-b">
 </head>
 <body>
 
@@ -279,7 +279,7 @@
                 <header class="study-header">
                     <div class="study-headings"><div class="study-eyebrow">COMPREHENSION · TWO QUESTIONS</div>
                         <h2 id="cqTitle">Check your comprehension</h2></div>
-                    <button type="button" class="study-action" onclick="cnnReturnToText()">← Reading</button>
+
                 </header>
                 <div id="cqQuestions" class="cq-grid"></div>
             </section>
@@ -287,7 +287,7 @@
                 <header class="study-header">
                     <div class="study-headings"><div class="study-eyebrow">VOCABULARY TRAINING · MULTIPLE CHOICE</div>
                         <h2 id="vqTitle">Vocabulary Practice</h2></div>
-                    <button type="button" class="study-action" onclick="cnnReturnToText()">← Reading</button>
+
                 </header>
                 <div id="vqContent" class="vq-container"></div>
             </section>
