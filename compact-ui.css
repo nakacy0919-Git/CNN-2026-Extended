@@ -1,0 +1,142 @@
+/* Compact iPad-first controls and digital learning modes. Applied after inline styles. */
+html,body{width:100%;height:100%;overflow:hidden}
+.app-container{min-height:0;flex:1 1 auto}
+.nav-container{height:40px;min-height:40px;flex:0 0 auto;display:flex;gap:3px;overflow-x:auto;scrollbar-width:thin}
+.nav-btn{flex:1 0 37px;min-width:37px;padding:0 3px;font-size:clamp(10px,1.2vw,14px);line-height:1.2}
+.main-screen{min-width:0;min-height:0;flex:1 1 auto}
+.sidebar{box-sizing:border-box;display:grid;grid-template-columns:minmax(0,1fr);align-content:start;
+    justify-content:stretch;gap:7px;width:clamp(210px,19vw,248px);min-width:195px;max-width:none;
+    flex:0 0 auto;max-height:none;height:100%;padding:10px;overflow:visible;position:relative;z-index:20}
+.sidebar button,.sidebar summary{touch-action:manipulation}
+.compact-view-tabs,.compact-study-actions,.compact-audio-main,.compact-transport,.quiz-reveal-buttons{display:grid;gap:5px}
+.compact-view-tabs{grid-template-columns:1fr 1fr}
+.compact-view-tabs>button{min-height:45px;border:2px solid #fff;box-shadow:0 1px 4px #0001;
+ border-radius:9px;background:#8952aa;color:white;font-weight:850;font-size:13px;cursor:pointer;padding:5px 2px}
+.compact-view-tabs>button.is-current{background:#5c228c;border-color:#d5c0f8;box-shadow:inset 0 0 0 1px #e8d9ff}
+.compact-study-actions{grid-template-columns:repeat(2,minmax(0,1fr))}
+.compact-study-actions button{min-width:0;min-height:45px;border:1px solid #b882c6;box-shadow:0 1px 3px #0001;
+ border-radius:7px;color:#65218c;background:#fff;cursor:pointer;font-weight:800;font-size:clamp(11px,1.25vw,13px);
+ padding:5px 3px;line-height:1.15;white-space:normal}
+.compact-study-actions button:hover{background:#f7ebfc}
+.compact-study-actions button.is-current{color:white;background:#8237ad}
+.compact-study-actions button.study-reading{background:#d81967;color:#fff;border-color:#ca1460}
+.compact-audio{background:#fff;border:1px solid #e8d6ed;border-radius:10px;padding:6px;min-width:0}
+.compact-audio-main{grid-template-columns:1fr 1fr}
+.compact-audio-main button{min-width:0;min-height:43px;background:#2e8b57;color:#fff;border:0;border-radius:8px;
+ font-weight:800;cursor:pointer;font-size:13px;display:flex;gap:4px;align-items:center;justify-content:center}
+.compact-audio-main button:nth-child(2){background:#db9339}
+.compact-audio-main .icon-svg{width:18px;height:18px;flex:0 0 auto}
+.compact-transport{grid-template-columns:1fr 1.25fr 1fr;margin-top:5px}
+.compact-transport button{min-width:0;min-height:34px;background:#f4f5f8;color:#393c46;border:1px solid #d1d3d8;
+ border-radius:6px;font-weight:750;font-size:13px;cursor:pointer}
+#quizRevealControls[hidden],#digitalComprehension[hidden],#vocabularyPractice[hidden]{display:none!important}
+.quiz-reveal-buttons{grid-template-columns:repeat(2,minmax(0,1fr))}
+.quiz-reveal-buttons button{min-height:37px;border-radius:8px;border:1px solid #8d57bc;background:#f4e9ff;
+ font-weight:800;font-size:13px;color:#602a8c;cursor:pointer}
+.quiz-reveal-buttons button[aria-pressed=true]{background:#6c31ab;color:#fff}
+.compact-more{position:relative;min-width:0}
+.compact-more>summary{list-style:none;padding:7px 9px;border:1px solid #d8c6de;border-radius:7px;
+ font-size:12px;text-align:center;background:#fff;color:#67416b;cursor:pointer;font-weight:750}
+.compact-more>summary::-webkit-details-marker{display:none}
+.compact-more-content{position:absolute;right:0;top:calc(100% + 5px);width:min(330px,78vw);
+ padding:10px;z-index:60;border-radius:12px;background:#fff;box-shadow:0 12px 32px #0004;border:1px solid #dbcae4;
+ display:grid;gap:8px;max-height:min(65dvh,470px);overflow-y:auto}
+.compact-more[open]>summary{background:#eadcf0}
+.compact-extra-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px}
+.compact-extra-row button{min-height:34px;border:1px solid #d5c0d9;border-radius:7px;background:#f8f1fa;
+ color:#64377b;font-size:12px;font-weight:700;cursor:pointer}
+.compact-extra-label{font-size:11px;font-weight:800;color:#8e4a9c;margin-top:3px}
+.sidebar #audioStatus{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;min-height:0}
+.learning-panel{position:absolute;inset:0;background:#faf7fc;z-index:15;color:#292532;
+ box-sizing:border-box;display:flex;flex-direction:column;overflow:hidden}
+.study-header{flex:0 0 auto;display:flex;align-items:center;gap:8px;justify-content:space-between;
+ background:#fff;border-bottom:1px solid #e5d8ea;padding:clamp(10px,1.8vh,17px) clamp(12px,2vw,20px)}
+.study-headings{min-width:0}
+.study-eyebrow{font-size:11px;font-weight:850;color:#985caf;letter-spacing:.1em}
+.study-header h2{font-size:clamp(19px,2.4vw,29px);line-height:1.15;margin:3px 0 0;overflow-wrap:anywhere}
+.study-header>button{flex:0 0 auto}
+.study-action{border:1px solid #bd9ad1;border-radius:8px;min-height:34px;background:#fff;color:#69368d;
+ padding:7px 12px;font-weight:800;cursor:pointer;font-size:clamp(12px,1.2vw,14px)}
+.study-action-primary{background:#753baa;color:#fff;border-color:#753baa}
+.study-empty{font-size:16px;color:#6b5871;text-align:center;margin:25px}
+.cq-grid{flex:1 1 auto;min-height:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+ gap:clamp(8px,1.2vw,16px);padding:clamp(8px,1.4vw,18px);overflow:hidden}
+.cq-card{min-width:0;min-height:0;display:flex;flex-direction:column;overflow-y:auto;overscroll-behavior:contain;
+ border:1px solid #e5d6eb;box-shadow:0 2px 8px #24152f0c;background:#fff;border-radius:13px;
+ padding:clamp(10px,1.3vw,20px)}
+.cq-label{font-size:11px;color:#9755aa;font-weight:900;letter-spacing:.08em}
+.cq-question{font-size:clamp(16px,1.7vw,24px);line-height:1.35;margin:6px 0 14px}
+.cq-options{display:grid;gap:7px;flex:1 0 auto}
+.cq-option{display:flex;gap:9px;align-items:flex-start;border:2px solid #e7dfea;
+ padding:clamp(7px,1.1vw,12px);min-height:42px;background:#fff;color:#302a36;border-radius:10px;
+ font-size:clamp(13px,1.35vw,19px);line-height:1.3;font-weight:650;text-align:left;cursor:pointer;overflow-wrap:anywhere}
+.cq-letter{font-weight:900;color:#8e4eac;flex:0 0 22px}
+.cq-option.is-selected{background:#e8f4ff;border-color:#4f9cdd}
+.cq-option.is-answer{background:#7031ad;color:#fff;border-color:#7031ad;box-shadow:0 4px 15px #662ba744;
+ transform:translateY(-1px)}
+.cq-option.is-answer .cq-letter{color:#fff}
+.cq-option.is-wrong{background:#fff0f0;border-color:#e17b7b}
+.cq-footer{margin-top:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.cq-reveal{border:1px solid #bea1d4;border-radius:8px;background:#f8efff;color:#6b368d;
+ padding:6px 10px;font-size:12px;font-weight:800;cursor:pointer}
+.cq-result{font-size:12px;font-weight:800;color:#64268b;overflow-wrap:anywhere}
+.vq-container{padding:clamp(10px,2vw,22px);min-height:0;overflow-y:auto;overscroll-behavior:contain}
+.vq-topline{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:13px;font-weight:800;color:#7a4c8a}
+.vq-track{width:100%;height:6px;background:#e7d5ee;border-radius:8px;overflow:hidden;margin:10px 0}
+.vq-track-fill{height:100%;display:block;background:#8341b5;border-radius:8px;transition:width .2s}
+.vq-modes{display:flex;gap:6px;margin:12px 0 8px}
+.vq-mode{border-radius:8px;border:1px solid #d9c9e2;background:#fff;padding:8px 14px;color:#77518b;font-weight:800;cursor:pointer;font-size:13px}
+.vq-mode.is-current{color:#fff;background:#7031ad}
+.vq-instruction{font-size:13px;color:#77667c;margin:9px 0}
+.vq-prompt{font-size:clamp(19px,2.25vw,30px);font-weight:800;line-height:1.45;color:#272333;
+ margin:4px 0 14px;overflow-wrap:anywhere}
+.vq-choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.vq-choice{display:flex;gap:10px;align-items:center;text-align:left;min-height:55px;
+ padding:12px;border-radius:10px;border:2px solid #e2d9e7;background:#fff;color:#342a39;
+ font-weight:700;font-size:clamp(14px,1.6vw,18px);cursor:pointer;overflow-wrap:anywhere}
+.vq-choice:disabled{cursor:default;opacity:1}
+.vq-choice-label{color:#8643ad;font-weight:900;flex:0 0 18px}
+.vq-choice.is-selected{border-color:#5aa0cf;background:#ebf5ff}
+.vq-choice.is-correct{border-color:#4a9c73;background:#e8f7ee}
+.vq-choice.is-wrong{border-color:#d76770;background:#fff1f2}
+.vq-feedback{padding:12px;margin-top:12px;border:1px solid #e2d5e9;border-radius:10px;background:#f9f3fc;font-size:15px}
+.vq-feedback p{margin:6px 0}
+.vq-footer{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.vq-finished{margin:10vh auto;text-align:center}
+.vq-finish-icon{font-size:44px;color:#6b33a7}
+@media (orientation:portrait) and (max-width:900px){
+ .app-container{flex-direction:column}
+ .main-screen{flex:1 1 auto;width:100%;min-height:0}
+ #drag-handle{display:none}
+ .sidebar{width:100%!important;max-width:none;min-width:0;max-height:34dvh;height:auto;
+  flex:0 0 auto;grid-template-columns:minmax(0,1fr) minmax(0,1.5fr);
+  grid-template-areas:"views actions" "audio actions" "extra extra";align-items:start;padding:6px;gap:5px}
+ .compact-view-tabs{grid-area:views}
+ .compact-study-actions{grid-area:actions;grid-template-rows:repeat(3,minmax(35px,1fr))}
+ .compact-audio{grid-area:audio;padding:4px}
+ .compact-more{grid-area:extra}
+ .compact-more>summary{padding:5px}
+ .compact-view-tabs>button,.compact-study-actions button{min-height:37px;font-size:11px}
+ .compact-audio-main button{min-height:36px;font-size:11px}
+ .compact-transport button{min-height:27px;font-size:11px}
+ #quizRevealControls{grid-column:1/-1;grid-row:4;min-height:0}
+ .cq-grid{grid-template-columns:1fr;overflow-y:auto;align-content:start}
+ .cq-card{overflow:visible}
+ .cq-question{font-size:17px}
+ .cq-option{font-size:15px}
+}
+@media (max-height:650px) and (orientation:landscape){
+ .sidebar{gap:4px;padding:5px}
+ .compact-view-tabs>button,.compact-study-actions button{min-height:34px;font-size:11px}
+ .compact-audio-main button{min-height:34px}
+ .compact-transport button{min-height:28px}
+ .compact-more>summary{padding:4px}
+ .nav-container{height:32px;min-height:32px}
+}
+@media (max-width:600px){
+ .cq-grid{grid-template-columns:1fr;overflow-y:auto}
+ .cq-card{overflow:visible}
+ .vq-choices{grid-template-columns:1fr}
+ .study-header{padding:8px}
+ .study-header h2{font-size:18px}
+}
