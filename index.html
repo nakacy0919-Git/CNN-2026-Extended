@@ -13,7 +13,7 @@
     <script src="speech.js" defer></script>
     <script src="interactive.js" defer></script>
     <script src="comprehension-data.js" defer></script>
-    <script src="lesson-ui.js?v=redesign-20261107-b" defer></script>
+    <script src="lesson-ui.js?v=classic-20261107-c" defer></script>
     <link rel="stylesheet" href="interactive.css">
 
     <style>
@@ -221,7 +221,7 @@
             .vocab-items { grid-template-columns: 1fr; }
         }
     </style>
-    <link rel="stylesheet" href="compact-ui.css?v=redesign-20261107-b">
+    <link rel="stylesheet" href="compact-ui.css?v=classic-20261107-c">
 </head>
 <body>
 
@@ -298,81 +298,88 @@
         <!-- The split width is responsive; manual resizing has been retired. -->
 
         <!-- サイドバー -->
-        <div class="sidebar" id="sidebar" aria-label="Lesson controls">
-            <div class="compact-view-tabs" role="group" aria-label="Reading display">
-                <button type="button" data-cnn-mode="text" aria-pressed="true" onclick="showInteractiveLesson(currentFolder)">Interactive Text</button>
-                <button type="button" data-cnn-mode="original" aria-pressed="false" onclick="showOriginalTranscript()">Original Image</button>
-            </div>
-            <div class="compact-study-actions" role="group" aria-label="Learning activities">
-                <button type="button" data-cnn-mode="comprehension" aria-pressed="false" onclick="showDigitalComprehension()">Comprehension</button>
-                <button type="button" data-cnn-mode="vocabulary" aria-pressed="false" onclick="showVocabularyPractice()">Vocabulary Quiz</button>
-                <button class="study-reading" type="button" onclick="openReadingMode()">Reading 🎤</button>
-                <button type="button" onclick="cnnShowFullJapaneseTranslation()">日本語訳</button>
-                <button type="button" onclick="toggleSlide('point')">Get the point</button>
-                <button type="button" onclick="toggleMainAudio('vocab')">Pronunciation ♫</button>
-            </div>
-            <div id="quizRevealControls" class="quiz-reveal-buttons" hidden role="group" aria-label="Correct answers">
-                <button id="quizAnswer1" type="button" aria-pressed="false" onclick="revealComprehensionAnswer(1)">答え 1</button>
-                <button id="quizAnswer2" type="button" aria-pressed="false" onclick="revealComprehensionAnswer(2)">答え 2</button>
-            </div>
-            <div class="compact-audio" aria-label="Audio playback">
-                <div class="compact-audio-main">
-                    <button id="btn-main-natural" type="button" onclick="togglePlayPause('natural')">
-                        Natural <svg class="icon-svg" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-                    </button>
-                    <button id="btn-main-slow" type="button" onclick="togglePlayPause('slow')">
-                        Slow <svg class="icon-svg" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-                    </button>
+                <svg class="cnn-icon-library" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+            <symbol id="cnn-ic-play" viewBox="0 0 24 24"><polygon points="8 5 19 12 8 19 8 5"/></symbol>
+            <symbol id="cnn-ic-book" viewBox="0 0 24 24"><path d="M12 7c-3-2-6-2-9-1v13c3-1 6-1 9 1 3-2 6-2 9-1V6c-3-1-6-1-9 1Zm0 0v13"/></symbol>
+            <symbol id="cnn-ic-image" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m3 17 5-5 4 4 3-3 6 5"/></symbol>
+            <symbol id="cnn-ic-list" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></symbol>
+            <symbol id="cnn-ic-light" viewBox="0 0 24 24"><path d="M9 18h6m-5 3h4m-3-3v-2c-2-1-4-3-4-6a5 5 0 0 1 10 0c0 3-2 5-4 6v2"/></symbol>
+            <symbol id="cnn-ic-quiz" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M9 9a3 3 0 0 1 6 0c0 2-3 2-3 4m0 3h.01"/></symbol>
+            <symbol id="cnn-ic-vocab" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M8 9h8M8 13h5M8 17h8"/></symbol>
+            <symbol id="cnn-ic-ear" viewBox="0 0 24 24"><path d="M18 10a6 6 0 0 0-12 0c0 4 5 3 5 7a3 3 0 0 0 6 0"/></symbol>
+            <symbol id="cnn-ic-translate" viewBox="0 0 24 24"><path d="M4 5h12M10 3v2m4 0c-.5 5-4 9-9 11m1-8c1 3 4 6 8 7m2 5 3-8 3 8m-5-2h4"/></symbol>
+            <symbol id="cnn-ic-mic" viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="13" rx="3"/><path d="M5 11a7 7 0 0 0 14 0m-7 7v4m-4 0h8"/></symbol>
+            <symbol id="cnn-ic-rewind" viewBox="0 0 24 24"><path d="m11 7-6 5 6 5V7Zm9 0-6 5 6 5V7Z"/></symbol>
+            <symbol id="cnn-ic-next" viewBox="0 0 24 24"><path d="m4 7 6 5-6 5V7Zm9 0 6 5-6 5V7Z"/></symbol>
+            <symbol id="cnn-ic-stop" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/></symbol>
+            <symbol id="cnn-ic-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+            <symbol id="cnn-ic-x" viewBox="0 0 24 24"><path d="M5 5l14 14M19 5 5 19"/></symbol>
+        </svg>
+        <aside class="sidebar" id="sidebar" aria-label="Lesson controls">
+            <div class="cnn-audio-stack" role="group" aria-label="Listening controls">
+                <div class="cnn-audio-card cnn-audio-natural">
+                <button class="cnn-audio-primary" id="btn-main-natural" aria-pressed="false" type="button" onclick="togglePlayPause('natural')">
+                    <svg class="cnn-tool-icon" aria-hidden="true"><use href="#cnn-ic-ear"/></svg><span class="cnn-audio-title">Natural</span><span class="audio-play-indicator" aria-hidden="true">▶</span>
+                </button>
+                <div class="cnn-audio-tools">
+                  <div class="cnn-audio-transport">
+                    <button type="button" title="5秒戻る" aria-label="natural: 5秒戻る" onclick="seekAudio('natural',-5)"><svg class="cnn-tool-icon" aria-hidden="true"><use href="#cnn-ic-rewind"/></svg><span>5s</span></button>
+                    <button type="button" title="停止" aria-label="natural: 停止" onclick="stopAudioOnly('natural')"><svg class="cnn-tool-icon" aria-hidden="true"><use href="#cnn-ic-stop"/></svg></button>
+                    <button type="button" title="5秒進む" aria-label="natural: 5秒進む" onclick="seekAudio('natural',5)"><svg class="cnn-tool-icon" aria-hidden="true"><use href="#cnn-ic-next"/></svg><span>5s</span></button>
+                  </div>
+                  <div class="cnn-audio-loop" aria-label="natural: 再生範囲">
+                    <button id="btn-natural-start" type="button" onclick="setLoopStart('natural')" title="範囲の始点">A</button>
+                    <button id="btn-natural-end" type="button" onclick="setLoopEnd('natural')" title="範囲の終点">B</button>
+                    <button type="button" onclick="clearLoop('natural')" title="範囲解除">Clear</button>
+                  </div>
                 </div>
-                <div class="compact-transport">
-                    <button type="button" onclick="cnnTransportSeek(-5)" aria-label="Back five seconds">−5s</button>
-                    <button type="button" onclick="cnnTransportStop()" aria-label="Stop audio">■ Stop</button>
-                    <button type="button" onclick="cnnTransportSeek(5)" aria-label="Skip five seconds">+5s</button>
+            </div>
+                <div class="cnn-audio-card cnn-audio-slow">
+                <button class="cnn-audio-primary" id="btn-main-slow" aria-pressed="false" type="button" onclick="togglePlayPause('slow')">
+                    <svg class="cnn-tool-icon" aria-hidden="true"><use href="#cnn-ic-ear"/></svg><span class="cnn-audio-title">Slow</span><span class="audio-play-indicator" aria-hidden="true">▶</span>
+                </button>
+                <div class="cnn-audio-tools">
+                  <div class="cnn-audio-transport">
+                    <button type="button" title="5秒戻る" aria-label="slow: 5秒戻る" onclick="seekAudio('slow',-5)"><svg class="cnn-tool-icon" aria-hidden="true"><use href="#cnn-ic-rewind"/></svg><span>5s</span></button>
+                    <button type="button" title="停止" aria-label="slow: 停止" onclick="stopAudioOnly('slow')"><svg class="cnn-tool-icon" aria-hidden="true"><use href="#cnn-ic-stop"/></svg></button>
+                    <button type="button" title="5秒進む" aria-label="slow: 5秒進む" onclick="seekAudio('slow',5)"><svg class="cnn-tool-icon" aria-hidden="true"><use href="#cnn-ic-next"/></svg><span>5s</span></button>
+                  </div>
+                  <div class="cnn-audio-loop" aria-label="slow: 再生範囲">
+                    <button id="btn-slow-start" type="button" onclick="setLoopStart('slow')" title="範囲の始点">A</button>
+                    <button id="btn-slow-end" type="button" onclick="setLoopEnd('slow')" title="範囲の終点">B</button>
+                    <button type="button" onclick="clearLoop('slow')" title="範囲解除">Clear</button>
+                  </div>
                 </div>
             </div>
-            <button class="study-more-trigger" type="button" onclick="cnnOpenMaterials()" aria-haspopup="dialog">
-                <span aria-hidden="true">⚙</span> その他の教材・音声設定
-            </button>
+            </div>
+            <div class="cnn-tool-stack" role="group" aria-label="教材と練習">
+                <button type="button" class="cnn-action cnn-action-feature" data-cnn-mode="point" aria-pressed="false" onclick="toggleSlide('point')"><svg class="cnn-tool-icon" aria-hidden="true"><use href="#cnn-ic-light"/></svg><span>Get the point</span></button>
+                <div class="cnn-tool-pair">
+                  <button type="button" class="cnn-action " data-cnn-mode="text" aria-pressed="false" onclick="showInteractiveLesson(currentFolder)"><svg class="cnn-tool-icon" aria-hidden="true"><use href="#cnn-ic-book"/></svg><span>Interactive Text</span></button>
+                  <button type="button" class="cnn-action " data-cnn-mode="original" aria-pressed="false" onclick="showOriginalTranscript()"><svg class="cnn-tool-icon" aria-hidden="true"><use href="#cnn-ic-image"/></svg><span>Original Image</span></button>
+                </div>
+                <div class="cnn-tool-pair">
+                  <button type="button" class="cnn-action " data-cnn-mode="vocablist" aria-pressed="false" onclick="toggleSlide('newwords')"><svg class="cnn-tool-icon" aria-hidden="true"><use href="#cnn-ic-list"/></svg><span>Vocabulary List</span></button>
+                  <button type="button" class="cnn-action " data-cnn-mode="vocabquiz" aria-pressed="false" onclick="showVocabularyPractice()"><svg class="cnn-tool-icon" aria-hidden="true"><use href="#cnn-ic-vocab"/></svg><span>Vocabulary Quiz</span></button>
+                </div>
+                <div class="cnn-tool-pair">
+                  <button type="button" class="cnn-action " data-cnn-mode="pronounce" aria-pressed="false" onclick="toggleMainAudio('vocab')"><svg class="cnn-tool-icon" aria-hidden="true"><use href="#cnn-ic-ear"/></svg><span>Pronunciation</span></button>
+                  <button type="button" class="cnn-action " data-cnn-mode="japanese" aria-pressed="false" onclick="cnnShowFullJapaneseTranslation()"><svg class="cnn-tool-icon" aria-hidden="true"><use href="#cnn-ic-translate"/></svg><span>日本語訳</span></button>
+                </div>
+                <div class="cnn-tool-pair cnn-secondary-tools">
+                  <button type="button" class="cnn-action " data-cnn-mode="jpimage" aria-pressed="false" onclick="toggleSlide('japanese')"><svg class="cnn-tool-icon" aria-hidden="true"><use href="#cnn-ic-image"/></svg><span>JP Image</span></button>
+                  <button type="button" class="cnn-action " data-cnn-mode="quizimage" aria-pressed="false" onclick="toggleSlide('compre-image')"><svg class="cnn-tool-icon" aria-hidden="true"><use href="#cnn-ic-image"/></svg><span>Quiz Image</span></button>
+                </div>
+                <button type="button" class="cnn-action cnn-action-reading" data-cnn-mode="reading" aria-pressed="false" onclick="openReadingMode()"><svg class="cnn-tool-icon" aria-hidden="true"><use href="#cnn-ic-mic"/></svg><span>Reading Practice</span></button>
+                <button type="button" class="cnn-action cnn-action-comprehension" data-cnn-mode="comprehension" aria-pressed="false" onclick="showDigitalComprehension()"><svg class="cnn-tool-icon" aria-hidden="true"><use href="#cnn-ic-quiz"/></svg><span>Comprehension</span></button>
+                <div id="quizRevealControls" class="quiz-reveal-buttons" hidden role="group" aria-label="正解表示">
+                    <button id="quizAnswer1" type="button" aria-pressed="false" onclick="revealComprehensionAnswer(1)"><svg class="cnn-tool-icon" aria-hidden="true"><use href="#cnn-ic-check"/></svg><span>Answer 1</span></button>
+                    <button id="quizAnswer2" type="button" aria-pressed="false" onclick="revealComprehensionAnswer(2)"><svg class="cnn-tool-icon" aria-hidden="true"><use href="#cnn-ic-check"/></svg><span>Answer 2</span></button>
+                </div>
+            </div>
             <div id="audioStatus" class="audio-status" role="status" aria-live="polite"></div>
-        </div>
+        </aside>
     </div>
-
-    <dialog id="materialsDialog" class="study-settings-dialog" aria-labelledby="materialsTitle">
-        <div class="study-settings-head">
-            <div>
-                <div class="study-eyebrow">EXTRA MATERIALS</div>
-                <h2 id="materialsTitle">教材・再生設定</h2>
-            </div>
-            <button type="button" class="study-dialog-close" onclick="cnnCloseMaterials()" aria-label="閉じる">×</button>
-        </div>
-        <div class="study-settings-body">
-            <section class="study-settings-section" aria-label="Materials">
-                <h3>教材を表示</h3>
-                <div class="study-settings-grid">
-                    <button type="button" onclick="cnnMaterialsAction('newwords')">Vocabulary List</button>
-                    <button type="button" onclick="cnnMaterialsAction('japanese')">日本語画像</button>
-                    <button type="button" onclick="cnnMaterialsAction('compre-image')">設問の画像</button>
-                    <button type="button" onclick="cnnMaterialsAction('text')">Interactive Text</button>
-                </div>
-            </section>
-            <section class="study-settings-section" aria-label="Natural Loop">
-                <h3>Natural 再生区間</h3>
-                <div class="study-settings-grid study-settings-loop">
-                    <button id="btn-natural-start" type="button" onclick="setLoopStart('natural')">Start</button>
-                    <button id="btn-natural-end" type="button" onclick="setLoopEnd('natural')">End</button>
-                    <button type="button" onclick="clearLoop('natural')">Clear</button>
-                </div>
-            </section>
-            <section class="study-settings-section" aria-label="Slow Loop">
-                <h3>Slow 再生区間</h3>
-                <div class="study-settings-grid study-settings-loop">
-                    <button id="btn-slow-start" type="button" onclick="setLoopStart('slow')">Start</button>
-                    <button id="btn-slow-end" type="button" onclick="setLoopEnd('slow')">End</button>
-                    <button type="button" onclick="clearLoop('slow')">Clear</button>
-                </div>
-            </section>
-        </div>
-    </dialog>
 
     <!-- オーディオ要素 -->
     <audio id="audioNatural"></audio>
@@ -590,8 +597,9 @@
         if (type !== 'natural' && type !== 'slow') return;
         const btn = document.getElementById(`btn-main-${type}`);
         if (!btn) return;
-        const label = type === 'natural' ? 'Natural' : 'Slow';
-        btn.innerHTML = isPlaying ? `${label} ${iconPause}` : `${label} ${iconPlay}`; 
+        const marker = btn.querySelector('.audio-play-indicator');
+        if (marker) marker.textContent = isPlaying ? 'Ⅱ' : '▶';
+        btn.setAttribute('aria-pressed', String(isPlaying));
     }
     function seekAudio(type, seconds) { let target = getAudioElement(type); if (target) target.currentTime += seconds; }
     function getAudioElement(type) { return type === 'natural' ? audioNat : type === 'slow' ? audioSlow : type === 'vocab' ? audioVocab : null; }
