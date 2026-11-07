@@ -280,6 +280,7 @@ function hideInteractiveReading() {
 function showInteractiveLesson(folder) {
     const lesson = typeof newsData !== 'undefined' ? newsData[folder] : null;
     if (!lesson || !lesson.transcript) return;
+    if (typeof hideDigitalLearning === 'function') hideDigitalLearning();
     hideInteractiveReading();
     interactiveState.folder = folder;
     interactiveState.sentences = cnnSplitSentences(lesson.transcript);
@@ -295,14 +296,17 @@ function showInteractiveLesson(folder) {
     if (typeof hideAnswerBoxes === 'function') hideAnswerBoxes();
     if (typeof contentLayer !== 'undefined') contentLayer.style.display = 'none';
     if (typeof activeSlideType !== 'undefined') activeSlideType = 'interactive';
+    if (typeof cnnSetMode === 'function') cnnSetMode('text');
 }
 function showOriginalTranscript() {
+    if (typeof hideDigitalLearning === 'function') hideDigitalLearning();
     hideInteractiveReading();
     if (typeof toggleSlide === 'function' && typeof activeSlideType !== 'undefined' && activeSlideType !== 'transcript') {
         toggleSlide('transcript');
     } else if (typeof contentLayer !== 'undefined') {
         contentLayer.style.display = 'block';
     }
+    if (typeof cnnSetMode === 'function') cnnSetMode('original');
 }
 
 function initializeInteractiveReading() {
@@ -310,8 +314,6 @@ function initializeInteractiveReading() {
     if (!reading) return;
     reading.addEventListener('pointerup',cnnScheduleSelection);
     reading.addEventListener('touchend',cnnScheduleSelection,{passive:true});
-    ir('irOriginalButton').addEventListener('click',showOriginalTranscript);
-    ir('irFullJapaneseButton').addEventListener('click',cnnShowFullJapaneseTranslation);
     ir('irPopupClose').addEventListener('click',cnnClosePopup);
     ir('interactivePopup').addEventListener('click',event => {
         if (event.target === ir('interactivePopup')) cnnClosePopup();
