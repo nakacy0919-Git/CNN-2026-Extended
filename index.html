@@ -60,12 +60,6 @@
         #contentLayer { position: absolute; top: 17%; left: 2.5%; width: 95%; height: 80%; object-fit: fill; display: none; z-index: 2; }
         .answer-box { position: absolute; border: 4px solid #ab47bc; border-radius: 8px; display: none; background-color: rgba(171, 71, 188, 0.2); cursor: pointer; z-index: 10; }
 
-        #drag-handle {
-            width: 18px; background: linear-gradient(to right, #f3e5f5, #e1bee7, #f3e5f5); cursor: col-resize; 
-            display: flex; justify-content: center; align-items: center; flex-shrink: 0; z-index: 100; touch-action: none;
-            border-left: 1px solid #ce93d8; border-right: 1px solid #ce93d8;
-        }
-        #drag-handle::after { content: ""; width: 4px; height: 30px; border-left: 2px solid #9c27b0; border-right: 2px solid #9c27b0; }
 
         .sidebar {
             width: 200px; min-width: 160px; max-width: 60%; background-color: #f4eef5; padding: 6px; 
@@ -219,7 +213,6 @@
         @media (orientation: portrait) and (max-width: 900px) {
             .app-container { flex-direction: column; }
             .main-screen { width: 100%; min-width: 0; min-height: 28dvh; flex: 1 1 auto; }
-            #drag-handle { display: none; }
             .sidebar { box-sizing: border-box; width: 100% !important; min-width: 0; max-width: none; max-height: 43dvh; height: auto; flex: 0 0 auto; display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 4px; padding: 4px; }
             .sidebar-group { min-width: 0; }
             .sidebar .btn { padding: 6px 0; font-size: 13px; }
@@ -302,7 +295,7 @@
         </div>
 
         <!-- リサイズハンドル -->
-        <div id="drag-handle"></div>
+        <!-- The split width is responsive; manual resizing has been retired. -->
 
         <!-- サイドバー -->
         <div class="sidebar" id="sidebar" aria-label="Lesson controls">
@@ -337,33 +330,49 @@
                     <button type="button" onclick="cnnTransportSeek(5)" aria-label="Skip five seconds">+5s</button>
                 </div>
             </div>
-            <details class="compact-more" id="moreMaterials">
-                <summary>その他の教材・ループ設定 ▾</summary>
-                <div class="compact-more-content">
-                    <div class="compact-extra-label">教材画像（必要なときだけ表示）</div>
-                    <div class="compact-extra-row">
-                        <button type="button" onclick="toggleSlide('newwords')">Vocabulary List</button>
-                        <button type="button" onclick="toggleSlide('japanese')">JP Image</button>
-                        <button type="button" onclick="toggleSlide('compre-image')">Quiz Image</button>
-                        <button type="button" onclick="cnnReturnToText()">Textに戻る</button>
-                    </div>
-                    <div class="compact-extra-label">Natural Loop</div>
-                    <div class="compact-extra-row">
-                        <button id="btn-natural-start" type="button" onclick="setLoopStart('natural')">Start</button>
-                        <button id="btn-natural-end" type="button" onclick="setLoopEnd('natural')">End</button>
-                        <button type="button" onclick="clearLoop('natural')">Clear</button>
-                    </div>
-                    <div class="compact-extra-label">Slow Loop</div>
-                    <div class="compact-extra-row">
-                        <button id="btn-slow-start" type="button" onclick="setLoopStart('slow')">Start</button>
-                        <button id="btn-slow-end" type="button" onclick="setLoopEnd('slow')">End</button>
-                        <button type="button" onclick="clearLoop('slow')">Clear</button>
-                    </div>
-                </div>
-            </details>
+            <button class="study-more-trigger" type="button" onclick="cnnOpenMaterials()" aria-haspopup="dialog">
+                <span aria-hidden="true">⚙</span> その他の教材・音声設定
+            </button>
             <div id="audioStatus" class="audio-status" role="status" aria-live="polite"></div>
         </div>
     </div>
+
+    <dialog id="materialsDialog" class="study-settings-dialog" aria-labelledby="materialsTitle">
+        <div class="study-settings-head">
+            <div>
+                <div class="study-eyebrow">EXTRA MATERIALS</div>
+                <h2 id="materialsTitle">教材・再生設定</h2>
+            </div>
+            <button type="button" class="study-dialog-close" onclick="cnnCloseMaterials()" aria-label="閉じる">×</button>
+        </div>
+        <div class="study-settings-body">
+            <section class="study-settings-section" aria-label="Materials">
+                <h3>教材を表示</h3>
+                <div class="study-settings-grid">
+                    <button type="button" onclick="cnnMaterialsAction('newwords')">Vocabulary List</button>
+                    <button type="button" onclick="cnnMaterialsAction('japanese')">日本語画像</button>
+                    <button type="button" onclick="cnnMaterialsAction('compre-image')">設問の画像</button>
+                    <button type="button" onclick="cnnMaterialsAction('text')">Interactive Text</button>
+                </div>
+            </section>
+            <section class="study-settings-section" aria-label="Natural Loop">
+                <h3>Natural 再生区間</h3>
+                <div class="study-settings-grid study-settings-loop">
+                    <button id="btn-natural-start" type="button" onclick="setLoopStart('natural')">Start</button>
+                    <button id="btn-natural-end" type="button" onclick="setLoopEnd('natural')">End</button>
+                    <button type="button" onclick="clearLoop('natural')">Clear</button>
+                </div>
+            </section>
+            <section class="study-settings-section" aria-label="Slow Loop">
+                <h3>Slow 再生区間</h3>
+                <div class="study-settings-grid study-settings-loop">
+                    <button id="btn-slow-start" type="button" onclick="setLoopStart('slow')">Start</button>
+                    <button id="btn-slow-end" type="button" onclick="setLoopEnd('slow')">End</button>
+                    <button type="button" onclick="clearLoop('slow')">Clear</button>
+                </div>
+            </section>
+        </div>
+    </dialog>
 
     <!-- オーディオ要素 -->
     <audio id="audioNatural"></audio>
@@ -435,34 +444,6 @@
     // =========================================
     const iconPlay = '<svg class="icon-svg" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>';
     const iconPause = '<svg class="icon-svg" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>';
-
-    const dragHandle = document.getElementById('drag-handle');
-    const sidebar = document.getElementById('sidebar');
-    const appContainer = document.getElementById('appContainer');
-    let isResizing = false;
-
-    dragHandle.addEventListener('mousedown', startResize);
-    dragHandle.addEventListener('touchstart', startResize, { passive: false });
-
-    function startResize(e) {
-        e.preventDefault(); isResizing = true; document.body.style.cursor = 'col-resize';
-        document.addEventListener('mousemove', resize); document.addEventListener('touchmove', resize, { passive: false });
-        document.addEventListener('mouseup', stopResize); document.addEventListener('touchend', stopResize);
-    }
-    function resize(e) {
-        if (!isResizing) return;
-        const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
-        const containerRect = appContainer.getBoundingClientRect();
-        let newSidebarWidth = containerRect.right - clientX;
-        if (newSidebarWidth < 150) newSidebarWidth = 150;
-        if (newSidebarWidth > containerRect.width * 0.7) newSidebarWidth = containerRect.width * 0.7;
-        sidebar.style.width = newSidebarWidth + 'px';
-    }
-    function stopResize() {
-        isResizing = false; document.body.style.cursor = 'default';
-        document.removeEventListener('mousemove', resize); document.removeEventListener('touchmove', resize);
-        document.removeEventListener('mouseup', stopResize); document.removeEventListener('touchend', stopResize);
-    }
 
     const loopStates = { natural: { start: null, end: null, active: false }, slow: { start: null, end: null, active: false } };
     let currentFolder = 'news1'; 
